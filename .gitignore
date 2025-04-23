@@ -1,0 +1,81 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Python environment variables
+.env
+*.env
+
+# Poetry
+poetry.lock
+# Uncomment below if you want to ignore the virtualenv that Poetry might create
+# .venv/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+static/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Docker
+*.pid
+*.seed
+docker-compose.override.yml
+
+# Pytest
+.cache/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+
+# Pyre
+.pyre/
+
+# build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pgAdmin
+pgadmin4.log
