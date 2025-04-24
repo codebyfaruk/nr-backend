@@ -1,8 +1,9 @@
 from rest_framework.routers import DefaultRouter
 
-from .views import CustomerViewSet, DiscountViewSet, ProductViewSet
+from store.views import CategoryViewSet, DiscountViewSet, InvoiceViewSet, ProductViewSet
 
 router = DefaultRouter()
-router.register(r"customers", CustomerViewSet)
-router.register(r"products", ProductViewSet)
-router.register(r"discounts", DiscountViewSet)
+router.register(r"products", ProductViewSet, basename="product")
+router.register(r"categories", CategoryViewSet, basename="category")
+router.register(r"discounts", DiscountViewSet, basename="discount")
+router.register(r"invoices", InvoiceViewSet, basename="invoice")

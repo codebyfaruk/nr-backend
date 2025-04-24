@@ -35,6 +35,11 @@ class Category(MPTTModel):
 
 # Product model (for the clothing items)
 class Product(TimeStampedModel, models.Model):
+    DISCOUNT_TYPE_CHOICES = (
+        ("flat", "Flat"),
+        ("percent", "Percentage"),
+    )
+
     name = models.CharField(max_length=255)
     short_name = models.CharField(
         max_length=100, null=True, blank=True
@@ -49,6 +54,12 @@ class Product(TimeStampedModel, models.Model):
     displayed_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )  # Price shown to customer (₹200)
+    discount_type = models.CharField(
+        max_length=10, choices=DISCOUNT_TYPE_CHOICES, null=True, blank=True
+    )
+    value = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )  # e.g. 10% or ₹100
     discount_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, null=True, blank=True
     )  # Discount amount (₹50)
