@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "accounts",
     "drf_yasg",
+    "mptt",
+    "store",
 ]
 AUTH_USER_MODEL = "accounts.CustomUser"
 
@@ -48,6 +50,7 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ]
 }
 

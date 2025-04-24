@@ -28,6 +28,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from accounts.urls import router as accounts_router
+from store.urls import router as store_router
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -41,6 +42,7 @@ schema_view = get_schema_view(
 
 router = DefaultRouter()
 router.registry.extend(accounts_router.registry)
+router.registry.extend(store_router.registry)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -60,8 +62,8 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("token/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("", include(router.urls), name="api"),
 ]
