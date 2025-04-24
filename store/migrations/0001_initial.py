@@ -32,7 +32,10 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=255)),
                 ("lft", models.PositiveIntegerField(editable=False)),
                 ("rght", models.PositiveIntegerField(editable=False)),
-                ("tree_id", models.PositiveIntegerField(db_index=True, editable=False)),
+                (
+                    "tree_id",
+                    models.PositiveIntegerField(db_index=True, editable=False),
+                ),
                 ("level", models.PositiveIntegerField(editable=False)),
                 (
                     "parent",
@@ -64,7 +67,10 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("name", models.CharField(max_length=255)),
-                ("code", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "code",
+                    models.CharField(blank=True, max_length=50, null=True),
+                ),
                 (
                     "discount_type",
                     models.CharField(
@@ -166,13 +172,19 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 ("name", models.CharField(max_length=255)),
-                ("short_name", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "short_name",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 ("description", models.TextField(blank=True)),
                 (
                     "purchase_price",
                     models.DecimalField(decimal_places=2, max_digits=10),
                 ),
-                ("selling_price", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "selling_price",
+                    models.DecimalField(decimal_places=2, max_digits=10),
+                ),
                 (
                     "displayed_price",
                     models.DecimalField(
@@ -190,14 +202,20 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("stock_quantity", models.PositiveIntegerField()),
-                ("brand", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "brand",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 (
                     "image",
                     models.ImageField(blank=True, null=True, upload_to="products/"),
                 ),
                 ("is_active", models.BooleanField(default=True)),
                 ("barcode", models.CharField(max_length=255, unique=True)),
-                ("cell_no", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "cell_no",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 (
                     "category",
                     models.ForeignKey(
@@ -239,7 +257,8 @@ class Migration(migrations.Migration):
                 (
                     "product",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="store.product"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="store.product",
                     ),
                 ),
             ],
