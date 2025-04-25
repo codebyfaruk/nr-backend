@@ -1,34 +1,16 @@
-from rest_framework import viewsets
+from django.views.generic import TemplateView
 
-from store.models import Category, Discount, Invoice, Product
-from store.permissions import IsStaffPermission
-from store.serializers import (
-    CategorySerializer,
-    DiscountSerializer,
-    InvoiceSerializer,
-    ProductSerializer,
-)
+from store.models import Product
 
 
-class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsStaffPermission]
+class DashboardView(TemplateView):
+    template_name = "index.html"
 
 
-class DiscountViewSet(viewsets.ModelViewSet):
-    queryset = Discount.objects.all()
-    serializer_class = DiscountSerializer
-    permission_classes = [IsStaffPermission]
+class ProductDetailView(TemplateView):
+    template_name = "store/product/view_product.html"
 
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [IsStaffPermission]
-
-
-class InvoiceViewSet(viewsets.ModelViewSet):
-    queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializer
-    permission_classes = [IsStaffPermission]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["products"] = Product.objects.all()
+        return context

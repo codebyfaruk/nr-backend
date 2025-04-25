@@ -28,6 +28,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from accounts.urls import router as accounts_router
+from accounts.views import CustomLoginView, CustomLogoutView
 from store.urls import router as store_router
 
 schema_view = get_schema_view(
@@ -64,6 +65,11 @@ urlpatterns = [
     ),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
-    path("", include(router.urls), name="api"),
+    path("api/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
+    path("api/", include(router.urls), name="api"),
+    # Dashboard URLs
+    path("", include("store.urls")),
+    path("login/", CustomLoginView.as_view(), name="login"),
+    path("logout/", CustomLogoutView.as_view(), name="logout"),
+    path("customer/", include("accounts.urls")),
 ]
