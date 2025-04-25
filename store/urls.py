@@ -7,7 +7,8 @@ from store.api_views import (
     InvoiceViewSet,
     ProductViewSet,
 )
-from store.views import DashboardView, ProductDetailView
+from store.views.dashboard import DashboardView
+from store.views.product import ProductAddView, ProductDetailView
 
 router = DefaultRouter()
 router.register(r"products", ProductViewSet, basename="product")
@@ -18,4 +19,5 @@ router.register(r"invoices", InvoiceViewSet, basename="invoice")
 urlpatterns = [
     path("", DashboardView.as_view(), name="home"),
     path("products/", ProductDetailView.as_view(), name="product"),
+    path("product/add/", ProductAddView.as_view(), name="product_add"),
 ]

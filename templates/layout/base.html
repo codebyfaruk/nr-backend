@@ -41,6 +41,9 @@
 
     <!-- CSS Just for demo purpose, don't include it in your project -->
     <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
+    {% block extra_css %}
+    {% endblock extra_css %}
+
   </head>
   <body>
     <div class="wrapper">
