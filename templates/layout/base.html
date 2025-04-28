@@ -41,6 +41,8 @@
 
     <!-- CSS Just for demo purpose, don't include it in your project -->
     <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
+     <!-- Include Select2 CSS -->
+     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     {% block extra_css %}
     {% endblock extra_css %}
 
@@ -122,6 +124,8 @@
 
   <!-- Kaiadmin JS -->
   <script src="{% static 'assets/js/kaiadmin.min.js' %}"></script>
+  <!-- Include Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   {% block extra_js %}
 
   {% endblock extra_js %}

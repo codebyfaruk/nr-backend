@@ -38,10 +38,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Third-party apps
     "rest_framework",
-    "accounts",
     "drf_yasg",
     "mptt",
+    "django_filters",
+    # Our apps
+    "accounts",
     "store",
 ]
 AUTH_USER_MODEL = "accounts.CustomUser"

@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView, UpdateView
 
-from store.forms import ProductForm
+from store.forms import ProductAddForm, ProductEditForm
 from store.models import Product
 
 
@@ -16,7 +16,7 @@ class ProductDetailView(TemplateView):
 
 class ProductAddView(CreateView):
     model = Product
-    form_class = ProductForm
+    form_class = ProductAddForm
     template_name = "store/product/add_product.html"
     success_url = reverse_lazy("product")
 
@@ -47,3 +47,15 @@ class ProductAddView(CreateView):
         import random
 
         return str(random.randint(100000, 999999))
+
+
+class ProductUpdateView(UpdateView):
+    model = Product
+    form_class = ProductEditForm
+    template_name = "store/product/edit_product.html"
+
+    def get_success_url(self):
+        return reverse_lazy("product")
+
+    def form_valid(self, form):
+        return super().form_valid(form)

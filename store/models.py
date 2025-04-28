@@ -36,6 +36,7 @@ class Category(MPTTModel):
 # Product model (for the clothing items)
 class Product(TimeStampedModel, models.Model):
     DISCOUNT_TYPE_CHOICES = (
+        ("", "Select Discount Type"),
         ("flat", "Flat"),
         ("percent", "Percentage"),
     )
