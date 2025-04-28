@@ -1,11 +1,11 @@
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView, UpdateView
+from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 
 from store.forms import ProductAddForm, ProductEditForm
 from store.models import Product
 
 
-class ProductDetailView(TemplateView):
+class ProductListView(TemplateView):
     template_name = "store/product/view_product.html"
 
     def get_context_data(self, **kwargs):
@@ -59,3 +59,16 @@ class ProductUpdateView(UpdateView):
 
     def form_valid(self, form):
         return super().form_valid(form)
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "store/product/product_detail.html"
+    context_object_name = "product"
+
+    def get_queryset(self):
+        """
+        Override the get_queryset method to ensure we're only fetching a single product
+        based on the provided product_id (URL parameter).
+        """
+        return Product.objects.filter(id=self.kwargs["pk"])

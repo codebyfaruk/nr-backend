@@ -1,0 +1,95 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container py-6">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">{{ product.name }}</h3>
+            <a href="{% url 'product_edit' product.id %}" class="btn btn-light btn-sm">
+                Edit Product
+            </a>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- Left Column -->
+                <div class="col-lg-6">
+                    <div class="mb-4">
+                        <h5 class="text-muted">Description</h5>
+                        <p>{{ product.description|default:"No description available." }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted">Product Info</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Brand:</strong> {{ product.brand|default:"N/A" }}</li>
+                            <li><strong>Barcode:</strong> {{ product.barcode }}</li>
+                            <li><strong>Cell No:</strong> {{ product.cell_no|default:"N/A" }}</li>
+                            <li><strong>Category:</strong>
+                            {% if product.category %}
+                                {{ product.category.name }}
+                            {% else %}
+                                N/A
+                            {% endif %}</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted">Stock</h5>
+                        <span class="badge bg-success fs-6">
+                            {{ product.stock_quantity }} in stock
+                        </span>
+                        {% if not product.is_active %}
+                            <span class="badge bg-danger fs-6">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-6">
+                    <div class="mb-4">
+                        <h5 class="text-muted">Pricing</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Purchase Price:</strong> ₹{{ product.purchase_price }}</li>
+                            <li><strong>Selling Price:</strong> ₹{{ product.selling_price }}</li>
+                            <li><strong>Displayed Price:</strong> ₹{{ product.displayed_price|default:"N/A" }}</li>
+                            {% if product.discount_type %}
+                                <li><strong>Discount Type:</strong> {{ product.get_discount_type_display }}</li>
+                                <li><strong>Discount Value:</strong>
+                                    {% if product.discount_type == "percent" %}
+                                        {{ product.value }}%
+                                    {% else %}
+                                        ₹{{ product.value }}
+                                    {% endif %}
+                                </li>
+                                <li><strong>Discount Amount:</strong> ₹{{ product.discount_amount }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted">Product Image</h5>
+                        {% if product.image %}
+                            <div class="d-flex justify-content-center">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                    class="img-fluid rounded-3 shadow-sm"
+                                    style="max-width: 250px; height: auto;">
+                            </div>
+                        {% else %}
+                            <div class="text-center p-4 bg-light rounded-3 border">
+                                <small>No Image Available</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <a href="{% url 'product' %}" class="btn btn-outline-primary">
+                Back to Products
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
