@@ -24,6 +24,7 @@
                         <ul class="list-unstyled">
                             <li><strong>Brand:</strong> {{ product.brand|default:"N/A" }}</li>
                             <li><strong>Barcode:</strong> {{ product.barcode }}</li>
+                            <li><strong>Short Name:</strong> {{ product.short_name }}</li>
                             <li><strong>Cell No:</strong> {{ product.cell_no|default:"N/A" }}</li>
                             <li><strong>Category:</strong>
                             {% if product.category %}

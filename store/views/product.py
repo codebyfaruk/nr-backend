@@ -1,3 +1,6 @@
+import random
+import string
+
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 
@@ -35,18 +38,30 @@ class ProductAddView(CreateView):
             instance.selling_price = instance.displayed_price or 0
 
         # Automatically generate barcode if not provided
+        if not instance.short_name:
+            instance.short_name = self.generate_short_name(instance.name)
         if not instance.barcode:
-            instance.barcode = self.generate_barcode()
+            instance.barcode = self.generate_barcode(instance.short_name)
 
-        instance.save()  # Save the product instance
+        instance.save()
         return super().form_valid(form)
 
-    def generate_barcode(self):
-        # You can implement barcode generation logic here
-        # For now, let's assume it's a random string (you can replace this with your barcode generation logic)
-        import random
+    def generate_barcode(self, short_name):
+        # Ensure short_name is exactly 4 characters: pad or trim
+        short = short_name.upper()[:4]
+        if len(short) < 4:
+            padding = "".join(random.choices(string.ascii_uppercase, k=4 - len(short)))
+            short += padding
 
-        return str(random.randint(100000, 999999))
+        prefix = "".join(random.choices(string.digits, k=4))
+        suffix = "".join(random.choices(string.digits, k=4))
+
+        return f"{prefix}{short}{suffix}"
+
+    def generate_short_name(self, name):
+        words = name.split()
+        abbreviation = "".join(word[0] for word in words[:3]).upper()
+        return abbreviation
 
 
 class ProductUpdateView(UpdateView):
@@ -58,7 +73,29 @@ class ProductUpdateView(UpdateView):
         return reverse_lazy("product")
 
     def form_valid(self, form):
+        instance = form.save(commit=False)
+
+        # Logic for calculating selling price based on displayed price and discount
+        if instance.displayed_price and instance.value:
+            if instance.discount_type == "percent":
+                discount = instance.displayed_price * (instance.value / 100)
+            else:
+                discount = instance.value
+            instance.selling_price = instance.displayed_price - discount
+            instance.discount_amount = discount
+        else:
+            instance.selling_price = instance.displayed_price or 0
+
+        if not instance.short_name:
+            instance.short_name = self.generate_short_name(instance.name)
+
+        instance.save()
         return super().form_valid(form)
+
+    def generate_short_name(self, name):
+        words = name.split()
+        abbreviation = "".join(word[0] for word in words[:3]).upper()
+        return abbreviation
 
 
 class ProductDetailView(DetailView):

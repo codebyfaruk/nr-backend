@@ -1,0 +1,308 @@
+{% extends "layout/base.html" %}
+{% block extra_css %}
+<style>
+  /* styles.css */
+
+/* Remove padding from table header and cells */
+.table th, .table td {
+  padding: 0 !important;  /* Removes padding */
+}
+
+/* Optional: Customize the table layout for fixed column widths */
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table thead th {
+  padding: 0 5px 0 5px !important;  /* Removes padding */
+  text-align: center; /* Center align header text */
+
+}
+
+.table tbody tr td {
+  padding: 0 5px 0 5px !important;  /* Removes padding */
+  text-align: center;
+}
+
+.table tfoot tr th {
+  padding: 0 5px 0 5px !important;  /* Removes padding */
+  text-align: center;
+}
+
+</style>
+{% endblock extra_css %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row g-3">
+      <!-- Left: Sales Form -->
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-primary text-white">Sales Form</div>
+          <div class="card-body">
+            <form id="salesForm">
+              <div class="mb-3">
+                <label for="barcode" class="form-label">Barcode</label>
+                <input type="text" id="barcode" class="form-control form-control-sm" placeholder="Scan or enter barcode" />
+              </div>
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" id="name" class="form-control form-control-sm" placeholder="Product Name" />
+              </div>
+              <div class="mb-3">
+                <label for="price" class="form-label">Selling Price</label>
+                <input type="number" id="price" class="form-control form-control-sm" />
+              </div>
+              <div class="mb-3">
+                <label for="qty" class="form-label">Qty</label>
+                <input type="number" id="qty" class="form-control form-control-sm" />
+              </div>
+              <div class="mb-3">
+                <label for="discount" class="form-label">Discount</label>
+                <input type="number" id="discount" class="form-control form-control-sm" />
+              </div>
+              <div class="d-grid">
+                <button type="button" class="btn btn-success" id="addToTableBtn">>></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Added Products -->
+      <div class="col-md-8">
+        <div class="card shadow-sm h-100 d-flex flex-column">
+          <div class="card-header bg-info text-white">Added Products</div>
+
+          <!-- Table -->
+          <div class="card-body p-2 flex-grow-1 overflow-hidden">
+            <div class="table-wrapper" style="max-height: 350px; overflow-x: auto;">
+              <table class="table table-sm table-bordered" id="productsTable">
+                <thead>
+                  <tr>
+                    <th class="col-1" style="font-size: 0.70rem;">SL</th> <!-- Very small SL column -->
+                    <th class="col-4" style="font-size: 0.70rem;">Product</th>  <!-- Bigger Product column -->
+                    <th class="col-1" style="font-size: 0.70rem;">Rate</th>  <!-- Small Rate column -->
+                    <th class="col-1" style="font-size: 0.70rem;">Discount</th>  <!-- Small Discount column -->
+                    <th class="col-1" style="font-size: 0.70rem;">Qty</th>  <!-- Very small Qty column -->
+                    <th class="col-1" style="font-size: 0.70rem;">Amount</th>  <!-- Small Amount column -->
+                    <th class="col-1" style="font-size: 0.70rem;">Action</th>  <!-- Small Action column -->
+                  </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+                <tfoot class="table-light">
+                  <tr>
+                    <th colspan="4">Totals</th>
+                    <th id="totalQty">0</th>
+                    <th id="totalAmount">0.00</th>
+                    <th></th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Footer Buttons: Toggle Left, Create Order Right -->
+            <div class="card-footer bg-white">
+                <div id="promoFields" class="px-3 py-2 border-bottom" style="display: none;">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <div class="input-group"> <!-- smaller size -->
+                                    <input type="text" class="form-control" placeholder="Enter Cupone Code" aria-label="Input field">
+                                    <button class="btn btn-secondary " type="button">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <div class="input-group"> <!-- smaller size -->
+                                    <input type="number" class="form-control" placeholder="Round off" aria-label="Input field">
+                                    <button class="btn btn-secondary " type="button">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Promo Inputs (shown when toggled) -->
+
+                    <!-- Toggle Switch -->
+                    <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="togglePromo" />
+                    <label class="form-check-label fw-semibold ms-2" for="togglePromo">Open Offer</label>
+                    </div>
+                    <!-- Create Order Button -->
+                    <button type="button" class="btn btn-sm btn-primary" id="createOrderBtn">Create Order</button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#togglePromo').on('change', function () {
+      $('#promoFields').slideToggle(this.checked);
+    });
+
+    function clearForm() {
+      $('#barcode').val('');
+      $('#name').val('');
+      $('#price').val('');
+      $('#qty').val('');
+      $('#discount').val('');
+    }
+
+    function updateTotals() {
+      let totalQty = 0;
+      let totalAmount = 0;
+
+      $('#productsTable tbody tr').each(function () {
+        const qty = parseInt($(this).find('td:nth-child(5)').text());
+        const amount = parseFloat($(this).find('td:nth-child(6)').text());
+        totalQty += qty;
+        totalAmount += amount;
+      });
+
+      $('#totalQty').text(totalQty);
+      $('#totalAmount').text(totalAmount.toFixed(2));
+    }
+
+    function addProductToTable(product) {
+      const tableBody = $('#productsTable tbody');
+      const qtyToAdd = parseInt($('#qty').val());
+      const discount = parseFloat(product.discount_amount);
+      const price = parseFloat(product.displayed_price);
+      const productId = product.id; // Use product ID to uniquely identify it
+
+      let rowUpdated = false;
+
+      // Loop through rows to check if product already exists by product ID
+      $('#productsTable tbody tr').each(function () {
+        const row = $(this);
+        const existingProductId = row.data('id'); // Store product ID in data attribute
+
+        if (existingProductId === productId) {
+          const qtyCell = row.find('td:nth-child(5)');
+          const amountCell = row.find('td:nth-child(6)');
+
+          let currentQty = parseInt(qtyCell.text());
+          let newQty = currentQty + qtyToAdd;
+          let newAmount = (price - discount) * newQty;
+
+          qtyCell.text(newQty);
+          amountCell.text(newAmount.toFixed(2));
+          rowUpdated = true;
+          return false; // break loop
+        }
+      });
+
+      // If product doesn't exist, add it as a new row
+      if (!rowUpdated) {
+        const rowCount = tableBody.children('tr').length;
+        const newRow = `
+          <tr data-id="${productId}">
+            <td>${rowCount + 1}</td>
+            <td>${product.name}</td>
+            <td>${price}</td>
+            <td>${discount}</td>
+            <td>${qtyToAdd}</td>
+            <td>${(price - discount) * qtyToAdd}</td>
+            <td>
+              <button type="button" class="btn btn-warning btn-sm editProductBtn">Edit</button>
+              <button type="button" class="btn btn-danger btn-sm removeProductBtn">Remove</button>
+            </td>
+          </tr>`;
+        tableBody.append(newRow);
+      }
+
+      updateTotals();
+      clearForm();
+    }
+
+    // New function to handle product edit
+    function editProduct(row) {
+      const nameCell = row.find('td:nth-child(2)');
+      const priceCell = row.find('td:nth-child(3)');
+      const discountCell = row.find('td:nth-child(4)');
+      const qtyCell = row.find('td:nth-child(5)');
+
+      const productName = nameCell.text();
+      const sellingPrice = parseFloat(priceCell.text());
+      const currentQty = parseInt(qtyCell.text());
+      const currentDiscount = parseFloat(discountCell.text()); // Directly parse discount value
+
+      // Set current values in form fields for editing
+      $('#name').val(productName);
+      $('#price').val(sellingPrice);
+      $('#qty').val(currentQty);
+      $('#discount').val(currentDiscount);
+
+      // Temporarily remove the row to allow for editing
+      row.remove();
+      updateTotals(); // Recalculate totals after row removal
+    }
+
+    // Handle barcode input and fetch product
+    let isFetching = false;
+    $('#barcode').on('keyup', function () {
+      const query = $('#barcode').val().trim();
+      if (!query || isFetching) return;
+
+      if (query.length == 12) {
+        isFetching = true;
+        $.ajax({
+          url: '/api/sales-product/',
+          data: { 'barcode': query },
+          type: 'GET',
+          success: function (product) {
+            if (product && product.barcode == query) {
+              // Fill the form fields
+              $('#name').val(product.name);
+              $('#price').val(product.displayed_price);
+              $('#discount').val(product.discount_amount);
+              $('#qty').val(1);
+
+              // Wait 1 second, then trigger the "add to table" button click
+              setTimeout(function () {
+                addProductToTable(product);
+                isFetching = false;
+              }, 1000);
+            } else {
+              alert('No matching product found.');
+            }
+          },
+          error: function () {
+            alert('Error fetching product. Please try again.');
+          }
+        });
+      }
+    });
+
+    // Handle edit button click to edit product quantity and discount
+    $(document).on('click', '.editProductBtn', function () {
+      const row = $(this).closest('tr');
+      editProduct(row);
+    });
+
+    // Handle remove product button click
+    $(document).on('click', '.removeProductBtn', function () {
+      const row = $(this).closest('tr');
+      row.remove();
+      updateTotals();
+    });
+
+  });
+</script>
+{% endblock extra_js %}

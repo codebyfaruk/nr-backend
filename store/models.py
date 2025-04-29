@@ -69,10 +69,9 @@ class Product(TimeStampedModel, models.Model):
     brand = models.CharField(max_length=100, null=True, blank=True)
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_printed = models.BooleanField(default=False)
     barcode = models.CharField(max_length=255, unique=True)
-    cell_no = models.CharField(
-        max_length=100, null=True, blank=True
-    )  # Cell number for inventory management
+    cell_no = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.name

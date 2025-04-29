@@ -37,8 +37,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "value",
             "discount_amount",
             "stock_quantity",
-            "category",  # Readable nested info
-            "category_id",  # ID input for create/update
+            "category",
+            "category_id",
             "brand",
             "image",
             "is_active",
@@ -139,3 +139,20 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             InvoiceItem.objects.create(invoice=invoice, **item_data)
         return invoice
+
+
+class SalesProductSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "selling_price",
+            "displayed_price",
+            "discount_type",
+            "value",
+            "discount_amount",
+            "stock_quantity",
+            "barcode",
+        ]

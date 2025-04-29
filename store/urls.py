@@ -6,6 +6,7 @@ from store.api_views import (
     DiscountViewSet,
     InvoiceViewSet,
     ProductViewSet,
+    SalesProductViewSet,
 )
 from store.views.dashboard import DashboardView
 from store.views.product import (
@@ -14,12 +15,14 @@ from store.views.product import (
     ProductListView,
     ProductUpdateView,
 )
+from store.views.sales import SalesView
 
 router = DefaultRouter()
 router.register(r"products", ProductViewSet, basename="api_product")
 router.register(r"categories", CategoryViewSet, basename="api_category")
 router.register(r"discounts", DiscountViewSet, basename="api_discount")
 router.register(r"invoices", InvoiceViewSet, basename="api_invoice")
+router.register(r"sales-product", SalesProductViewSet, basename="sales_product")
 
 urlpatterns = [
     path("", DashboardView.as_view(), name="home"),
@@ -27,4 +30,5 @@ urlpatterns = [
     path("product/add/", ProductAddView.as_view(), name="product_add"),
     path("products/<int:pk>/edit/", ProductUpdateView.as_view(), name="product_edit"),
     path("products/<int:pk>/", ProductDetailView.as_view(), name="product_detail"),
+    path("sales/", SalesView.as_view(), name="sales"),
 ]
