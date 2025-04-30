@@ -96,7 +96,9 @@ class Discount(TimeStampedModel, models.Model):
         max_digits=10, decimal_places=2, default=0
     )
     applies_to_all = models.BooleanField(default=True)
-    customers = models.ManyToManyField(User, blank=True)  # Only if applies_to_all=False
+    customers = models.ManyToManyField(
+        Customer, blank=True
+    )  # Only if applies_to_all=False
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)

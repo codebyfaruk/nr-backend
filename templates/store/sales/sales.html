@@ -61,8 +61,9 @@
                 <label for="discount" class="form-label">Discount</label>
                 <input type="number" id="discount" class="form-control form-control-sm" />
               </div>
+              <input type="hidden" id="id" value=""/>
               <div class="d-grid">
-                <button type="button" class="btn btn-success" id="addToTableBtn">>></button>
+                <button type="button" class="btn btn-success" id="addToTableBtn"><i class="fas fa-angle-double-right"></i></button>
               </div>
             </form>
           </div>
@@ -81,12 +82,12 @@
                 <thead>
                   <tr>
                     <th class="col-1" style="font-size: 0.70rem;">SL</th> <!-- Very small SL column -->
-                    <th class="col-4" style="font-size: 0.70rem;">Product</th>  <!-- Bigger Product column -->
-                    <th class="col-1" style="font-size: 0.70rem;">Rate</th>  <!-- Small Rate column -->
-                    <th class="col-1" style="font-size: 0.70rem;">Discount</th>  <!-- Small Discount column -->
+                    <th class="col-7" style="font-size: 0.70rem;">Product</th>  <!-- Bigger Product column -->
+                    <th class="col-2" style="font-size: 0.70rem;">Rate</th>  <!-- Small Rate column -->
+                    <th class="col-2" style="font-size: 0.70rem;">Discount</th>  <!-- Small Discount column -->
                     <th class="col-1" style="font-size: 0.70rem;">Qty</th>  <!-- Very small Qty column -->
-                    <th class="col-1" style="font-size: 0.70rem;">Amount</th>  <!-- Small Amount column -->
-                    <th class="col-1" style="font-size: 0.70rem;">Action</th>  <!-- Small Action column -->
+                    <th class="col-2" style="font-size: 0.70rem;">Amount</th>  <!-- Small Amount column -->
+                    <th class="col-2" style="font-size: 0.70rem;">Action</th>  <!-- Small Action column -->
                   </tr>
                 </thead>
                 <tbody>
@@ -156,12 +157,38 @@
       $('#promoFields').slideToggle(this.checked);
     });
 
+    $("#addToTableBtn").on("click", function () {
+      const id = $("#id").val().trim();
+      const name = $("#name").val().trim();
+      const price = parseFloat($("#price").val());
+      const qty = parseInt($("#qty").val());
+      const discount = parseFloat($("#discount").val());
+
+      if (!barcode || !name || isNaN(price) || isNaN(qty) || isNaN(discount)) {
+        alert("Please fill in all fields correctly.");
+        return;
+      }
+
+      // Create a product object
+      const product = {
+        id: id,
+        barcode: barcode,
+        name: name,
+        displayed_price: price,
+        discount_amount: discount,
+        qty: qty
+      };
+
+      addProductToTable(product);
+    });
+
     function clearForm() {
       $('#barcode').val('');
       $('#name').val('');
       $('#price').val('');
       $('#qty').val('');
       $('#discount').val('');
+      $('#id').val('');
     }
 
     function updateTotals() {
@@ -220,8 +247,8 @@
             <td>${qtyToAdd}</td>
             <td>${(price - discount) * qtyToAdd}</td>
             <td>
-              <button type="button" class="btn btn-warning btn-sm editProductBtn">Edit</button>
-              <button type="button" class="btn btn-danger btn-sm removeProductBtn">Remove</button>
+              <a href="javascript:void(0);" class="text-info p-1 editProductBtn"><i class="fas fa-angle-double-left"></i></a>
+              <a href="javascript:void(0);"class="text-danger p-1 removeProductBtn"><i class="fas fa-trash-alt"></i></a>
             </td>
           </tr>`;
         tableBody.append(newRow);
@@ -233,6 +260,7 @@
 
     // New function to handle product edit
     function editProduct(row) {
+      const productId = row.data('id');
       const nameCell = row.find('td:nth-child(2)');
       const priceCell = row.find('td:nth-child(3)');
       const discountCell = row.find('td:nth-child(4)');
@@ -244,6 +272,7 @@
       const currentDiscount = parseFloat(discountCell.text()); // Directly parse discount value
 
       // Set current values in form fields for editing
+      $('#id').val(productId);
       $('#name').val(productName);
       $('#price').val(sellingPrice);
       $('#qty').val(currentQty);
@@ -300,8 +329,15 @@
     $(document).on('click', '.removeProductBtn', function () {
       const row = $(this).closest('tr');
       row.remove();
-      updateTotals();
+      updateSerialNumbers();  // Update SL after removal
+      updateTotals();         // Update totals
     });
+
+    function updateSerialNumbers() {
+      $('#productsTable tbody tr').each(function (index) {
+        $(this).find('td:first').text(index + 1);  // Assuming SL is in the first <td>
+      });
+    }
 
   });
 </script>

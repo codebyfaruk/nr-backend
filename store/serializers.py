@@ -156,3 +156,8 @@ class SalesProductSerializer(serializers.ModelSerializer):
             "stock_quantity",
             "barcode",
         ]
+
+
+class ApplyCouponSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    total = serializers.DecimalField(max_digits=10, decimal_places=2)

@@ -8,7 +8,13 @@ from store.api_views import (
     ProductViewSet,
     SalesProductViewSet,
 )
+from store.views.customer import CustomerListView
 from store.views.dashboard import DashboardView
+from store.views.discount import (
+    DiscountCreateView,
+    DiscountListView,
+    DiscountUpdateView,
+)
 from store.views.product import (
     ProductAddView,
     ProductDetailView,
@@ -31,4 +37,8 @@ urlpatterns = [
     path("products/<int:pk>/edit/", ProductUpdateView.as_view(), name="product_edit"),
     path("products/<int:pk>/", ProductDetailView.as_view(), name="product_detail"),
     path("sales/", SalesView.as_view(), name="sales"),
+    path("coupons/", DiscountListView.as_view(), name="discount-list"),
+    path("coupons/add/", DiscountCreateView.as_view(), name="discount-add"),
+    path("coupons/<int:pk>/edit/", DiscountUpdateView.as_view(), name="discount-edit"),
+    path("customers/", CustomerListView.as_view(), name="customer_list"),
 ]

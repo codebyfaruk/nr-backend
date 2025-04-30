@@ -1,0 +1,72 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-inner">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="customerTable" class="display table table-striped table-hover dataTable" role="grid" aria-describedby="basic-datatables_info">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be injected here via JavaScript -->
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#customerTable').DataTable({
+            ajax: {
+                url: "{% url 'api_customer-list' %}",
+                dataSrc: '',
+                error: function(xhr, error, code) {
+                    let tableBody = $('#customerTable tbody');
+                    let colspan = $('#customerTable thead th').length;
+                    tableBody.empty();
+
+                    if (xhr.status == 401) {
+                        window.location.href = '/login/';
+                    } else {
+                      tableBody.append(
+                          `<tr class="table-error-row">
+                              <td colspan="${colspan}" style="text-align:center; color: red;">${xhr.responseJSON.detail}</td>
+                          </tr>`
+                      );
+                    }
+
+
+                }
+            },
+            columns: [
+                { data: 'id' },
+                { data: 'name' },
+                { data: 'phone' },
+                { data: 'email' },
+                { data: 'address' },
+
+            ],
+            order: [[1, 'asc']],
+            pageLength: 10,
+            searching: true,
+            lengthChange: false
+        });
+    });
+</script>
+{% endblock extra_js %}

@@ -1,6 +1,6 @@
 from django import forms
 
-from store.models import Category, Product
+from store.models import Category, Discount, Product
 
 
 class ProductAddForm(forms.ModelForm):
@@ -145,3 +145,13 @@ class ProductEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["image"].label = ""
+
+
+class DiscountForm(forms.ModelForm):
+    class Meta:
+        model = Discount
+        fields = "__all__"
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+        }
