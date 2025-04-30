@@ -103,18 +103,24 @@ class Discount(TimeStampedModel, models.Model):
     end_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
-    def is_valid_for(self, user, purchase_total):
-        """Check if discount applies to a given user and purchase total."""
+    def is_valid_for(self, customer, purchase_total):
+        """Check if discount applies to a given customer and purchase total."""
         if not self.is_active:
             return False
-        if self.start_date and self.start_date > timezone.now().date():
+
+        today = timezone.now().date()
+        if self.start_date and self.start_date > today:
             return False
-        if self.end_date and self.end_date < timezone.now().date():
+        if self.end_date and self.end_date < today:
             return False
-        if not self.applies_to_all and user not in self.customers.all():
-            return False
+
+        if not self.applies_to_all:
+            if not customer or customer not in self.customers.all():
+                return False
+
         if purchase_total < self.min_purchase_amount:
             return False
+
         return True
 
     def get_discount_amount(self, total):

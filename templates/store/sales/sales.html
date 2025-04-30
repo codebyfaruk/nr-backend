@@ -35,6 +35,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row g-3">
+      <input type="hidden" id="customerId" value=""/>
       <!-- Left: Sales Form -->
       <div class="col-md-4">
         <div class="card shadow-sm h-100">
@@ -112,8 +113,8 @@
                         <div class="col-md-7">
                             <div class="form-group">
                                 <div class="input-group"> <!-- smaller size -->
-                                    <input type="text" class="form-control" placeholder="Enter Cupone Code" aria-label="Input field">
-                                    <button class="btn btn-secondary " type="button">
+                                    <input type="text" class="form-control" id="couponValue" placeholder="Enter coupon Code" aria-label="Input field">
+                                    <button class="btn btn-secondary " type="button" id="applyPromoBtn">
                                         <i class="fas fa-check"></i>
                                     </button>
                                 </div>
@@ -122,8 +123,8 @@
                         <div class="col-md-5">
                             <div class="form-group">
                                 <div class="input-group"> <!-- smaller size -->
-                                    <input type="number" class="form-control" placeholder="Round off" aria-label="Input field">
-                                    <button class="btn btn-secondary " type="button">
+                                    <input type="number" class="form-control" id="roundOffValue" placeholder="Round off" aria-label="Input field">
+                                    <button class="btn btn-secondary " type="button" id="roundOffBtn">
                                         <i class="fas fa-check"></i>
                                     </button>
                                 </div>
@@ -147,12 +148,18 @@
       </div>
     </div>
 </div>
-
+<meta name="csrf-token" content="{{ csrf_token }}">
 {% endblock content %}
 
 {% block extra_js %}
 <script>
   $(document).ready(function () {
+    isCouponApplied =  false
+    isRoundOffApplied = false
+    $.ajaxSetup({
+      headers: { "X-CSRFToken": $("meta[name='csrf-token']").attr("content") }
+    });
+
     $('#togglePromo').on('change', function () {
       $('#promoFields').slideToggle(this.checked);
     });
@@ -293,7 +300,7 @@
       if (query.length == 12) {
         isFetching = true;
         $.ajax({
-          url: '/api/sales-product/',
+          url: '{% url "api_sales_product-list" %}',
           data: { 'barcode': query },
           type: 'GET',
           success: function (product) {
@@ -340,6 +347,98 @@
         $(this).find('td:first').text(index + 1);  // Assuming SL is in the first <td>
       });
     }
+
+    $("#applyPromoBtn").on("click", function () {
+      var totalAmount = parseFloat($("#totalAmount").text());
+      var couponValue = $("#couponValue").val().trim();
+      var customerId = $("#customerId").val().trim();
+
+      if (isCouponApplied) return;
+
+      $.ajax({
+        url: '{% url "api_discount-apply" %}',
+        type: 'POST',
+        data: JSON.stringify({
+            'code': couponValue,
+            'total': totalAmount,
+            'customer_id': customerId || null
+        }),
+        contentType: 'application/json',
+        success: function (response) {
+          if (response.discount > 0) {
+            updateFooter({ discount: response.discount })
+            isCouponApplied = true;
+          }
+
+        },
+        error: function (error) {
+          Swal.fire({
+              icon: 'error',
+              title: 'Oops!',
+              text: error.responseJSON.detail,
+              confirmButtonColor: '#d33',
+          });
+        }
+      });
+    });
+
+    $("#roundOffBtn").on("click", function () {
+      if (isRoundOffApplied) return;
+
+      var roundOffValue = parseFloat($("#roundOffValue").val());
+      if (isNaN(roundOffValue)) {
+        alert("Please enter a valid round off value.");
+        return;
+      }
+      updateFooter({ roundoff: roundOffValue });
+      isRoundOffApplied = true;
+    });
+
+    let currentDiscount = 0;
+    let currentRoundoff = 0;
+
+    function updateFooter(value) {
+      // Update values based on the passed object
+      if (typeof value === 'object') {
+          if ('discount' in value) currentDiscount = parseFloat(value.discount || 0);
+          if ('roundoff' in value) currentRoundoff = parseFloat(value.roundoff || 0);
+      }
+
+      const footer = $('#productsTable tfoot');
+      footer.find('.dynamic-row').remove(); // Remove previous discount/roundoff/grandtotal rows
+
+      const totalAmount = parseFloat($('#totalAmount').text()) || 0;
+      let grandTotal = totalAmount - currentDiscount - currentRoundoff;
+
+      // Add Discount row
+      if (currentDiscount > 0) {
+          $('<tr class="dynamic-row discount-row">')
+              .append('<th colspan="5" class="text-end text-muted">Coupon Discount</th>')
+              .append(`<th class="text-danger">- ${currentDiscount.toFixed(2)}</th>`)
+              .append('<th></th>')
+              .insertAfter(footer.find('tr:last'));
+      }
+
+      // Add Roundoff row
+      if (currentRoundoff > 0) {
+          $('<tr class="dynamic-row roundoff-row">')
+              .append('<th colspan="5" class="text-end text-muted">Round Off</th>')
+              .append(`<th class="text-warning">- ${currentRoundoff.toFixed(2)}</th>`)
+              .append('<th></th>')
+              .insertAfter(footer.find('tr:last'));
+      }
+
+      // Add Grand Total row
+      if (currentDiscount > 0 || currentRoundoff > 0) {
+          $('<tr class="dynamic-row grandtotal-row fw-bold">')
+              .append('<th colspan="5" class="text-end">Grand Total</th>')
+              .append(`<th>${grandTotal.toFixed(2)}</th>`)
+              .append('<th></th>')
+              .insertAfter(footer.find('tr:last'));
+      }
+    }
+
+
 
   });
 </script>

@@ -161,3 +161,4 @@ class SalesProductSerializer(serializers.ModelSerializer):
 class ApplyCouponSerializer(serializers.Serializer):
     code = serializers.CharField()
     total = serializers.DecimalField(max_digits=10, decimal_places=2)
+    cutomer_id = serializers.IntegerField(required=False, allow_null=True)
