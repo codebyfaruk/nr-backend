@@ -65,8 +65,14 @@
             order: [[1, 'asc']],
             pageLength: 10,
             searching: true,
-            lengthChange: false
+            lengthChange: false,
+            dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>rtip',
         });
+
+        // Append custom button after search input
+        $('#customerTable_filter').parent().append(
+          `<a href="#" class="btn btn-sm btn-primary ms-3" id="addCustomerBtn">Add Customer</button>`
+        );
     });
 </script>
 {% endblock extra_js %}

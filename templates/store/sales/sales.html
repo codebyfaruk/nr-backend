@@ -180,6 +180,7 @@
       };
 
       addProductToTable(product);
+      updateSerialNumbers();
     });
 
     function clearForm() {
@@ -323,6 +324,7 @@
     $(document).on('click', '.editProductBtn', function () {
       const row = $(this).closest('tr');
       editProduct(row);
+      updateSerialNumbers();
     });
 
     // Handle remove product button click

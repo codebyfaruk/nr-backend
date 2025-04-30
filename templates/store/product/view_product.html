@@ -5,34 +5,7 @@
       <div class="row">
         <div class="col-md-12">
           <div class="card">
-            <div class="card-header">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <ul class="breadcrumbs mb-0">
-                        <li class="nav-home">
-                            <a href="{% url 'home' %}">
-                                <i class="icon-home"></i>
-                            </a>
-                        </li>
-                        <li class="separator">
-                            <i class="icon-arrow-right"></i>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#">Tables</a>
-                        </li>
-                        <li class="separator">
-                            <i class="icon-arrow-right"></i>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#">Datatables</a>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <a href="{% url "product_add" %}" class="btn btn-primary btn-sm">Add Product</a>
-                </div>
-              </div>
-            </div>
+
             <div class="card-body">
               <div class="table-responsive">
                 <table id="productTable" class="display table table-striped table-hover dataTable" role="grid" aria-describedby="basic-datatables_info">
@@ -131,8 +104,14 @@
             order: [[1, 'asc']],
             pageLength: 10,
             searching: true,
-            lengthChange: false
+            lengthChange: false,
+            dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>rtip',
         });
+
+        // Append custom button after search input
+        $('#productTable_filter').parent().append(
+          `<a href="{% url "product_add" %}" class="btn btn-primary btn-sm">Add Product</a>`
+        );
     });
 </script>
 {% endblock extra_js %}
