@@ -41,22 +41,10 @@ class ProductAddView(CreateView):
         if not instance.short_name:
             instance.short_name = self.generate_short_name(instance.name)
         if not instance.barcode:
-            instance.barcode = self.generate_barcode(instance.short_name)
+            instance.barcode = "".join(random.choices(string.digits, k=12))
 
         instance.save()
         return super().form_valid(form)
-
-    def generate_barcode(self, short_name):
-        # Ensure short_name is exactly 4 characters: pad or trim
-        short = short_name.upper()[:4]
-        if len(short) < 4:
-            padding = "".join(random.choices(string.ascii_uppercase, k=4 - len(short)))
-            short += padding
-
-        prefix = "".join(random.choices(string.digits, k=4))
-        suffix = "".join(random.choices(string.digits, k=4))
-
-        return f"{prefix}{short}{suffix}"
 
     def generate_short_name(self, name):
         words = name.split()

@@ -60,6 +60,18 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="id_category">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.category.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
                             <label for="id_purchase_price">Purchase Price</label>
                             {{ form.purchase_price }}
                             {% if form.purchase_price.errors %}
@@ -81,6 +93,11 @@
                                 </div>
                             {% endif %}
                         </div>
+
+                    </div>
+
+                    <!-- Second Column (Right Side) -->
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="id_discount_type">Discount Type</label>
                             {{ form.discount_type }}
@@ -103,43 +120,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                    </div>
 
-                    <!-- Second Column (Right Side) -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="id_category">Category</label>
-                            {{ form.category }}
-                            {% if form.category.errors %}
-                                <div class="alert alert-danger">
-                                    {% for error in form.category.errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group">
-                            <label for="id_stock_quantity">Stock Quantity</label>
-                            {{ form.stock_quantity }}
-                            {% if form.stock_quantity.errors %}
-                                <div class="alert alert-danger">
-                                    {% for error in form.stock_quantity.errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group">
-                            <label for="id_cell_no">Cell Number</label>
-                            {{ form.cell_no }}
-                            {% if form.cell_no.errors %}
-                                <div class="alert alert-danger">
-                                    {% for error in form.cell_no.errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
                         <div class="form-group">
                             <label for="id_brand">Brand</label>
                             {{ form.brand }}
@@ -161,6 +142,60 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="id_stock_quantity">Stock Quantity</label>
+                                {{ form.stock_quantity }}
+                                {% if form.stock_quantity.errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.stock_quantity.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="id_cell_no">Cell Number</label>
+                                {{ form.cell_no }}
+                                {% if form.cell_no.errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.cell_no.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="id_color">Color</label>
+                                {{ form.color }}
+                                {% if form.color.errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.color.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="id_size">Size</label>
+                                {{ form.size }}
+                                {% if form.size.errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.size.errors %}
+                                            <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-12">

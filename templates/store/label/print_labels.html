@@ -1,0 +1,167 @@
+{% load form_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Label Print Layout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      line-height: 1;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+
+    .label-container {
+      width: 78.6mm;
+      height: 27mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 0;
+      page-break-inside: avoid;
+    }
+
+    .label {
+      width: 38mm;
+      height: 25mm;
+      border: 1px solid #000;
+      display: flex;
+      flex-direction: column;
+      font-size: 9px;
+      font-family: sans-serif;
+      padding: 1mm;
+      box-sizing: border-box;
+    }
+
+    .content-area {
+      display: flex;
+      flex-grow: 1; /* Allow content to take up remaining space */
+      justify-content: space-between;
+    }
+
+    .brand {
+      text-align: center;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 1mm 0;
+      border-bottom: 1px dashed #000;
+    }
+
+    .info-block {
+      flex: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      padding-right: 2mm;
+    }
+
+    .product-name {
+      font-weight: 600;
+      font-size: 10px;
+    }
+
+    .size-cell,
+    .price{
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .offer-price {
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .barcode-block {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 0;
+      height: 100%; /* Ensure that the barcode block takes full height of the label */
+    }
+
+    .barcode-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* Ensures the image is scaled to fit the container without distortion */
+    }
+
+    .btn-container {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 8px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      color: white;
+      background: #007bff;
+    }
+
+    @media print {
+      .btn-container {
+        display: none;
+      }
+
+      @page {
+        size: auto;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    {% for product in products %}
+      {% with product.stock_quantity|repeat as label_range %}
+        {% for label_pair in label_range|chunk_by_2 %}
+          <div class="label-container">
+            {% for _ in label_pair %}
+              <div class="label">
+                <div class="brand">NR BAAZAR</div>
+                <div class="content-area">
+                  <div class="info-block">
+                    <div class="product-name">{{ product.name|shorten_name }}</div>
+                    <div class="size-cell">Sz: {{ product.size }} &nbsp; Cell: {{ product.cell_no }}</div>
+                    {% if product.displayed_price == product.selling_price %}
+                      <div class="offer-price" >Price: ₹{{ product.displayed_price }}</div>
+                    {% else %}
+                      <div class="price"  style="text-decoration: line-through; color: gray;">Price: ₹{{ product.displayed_price }}</div>
+                      <div class="offer-price">O. Price: ₹{{ product.selling_price }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="barcode-block">
+                    <img src="{{ product.barcode_url }}" alt="Barcode" class="barcode-img" />
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+  <div class="btn-container">
+    <button class="btn" onclick="window.print()">Print Labels</button>
+  </div>
+
+</body>
+</html>

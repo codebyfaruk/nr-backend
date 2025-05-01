@@ -31,6 +31,8 @@ class ProductAddForm(forms.ModelForm):
             "stock_quantity",
             "brand",
             "image",
+            "color",
+            "size",
         ]
         widgets = {
             "name": forms.TextInput(
@@ -69,6 +71,12 @@ class ProductAddForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Brand name"}
             ),
             "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "color": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Color"}
+            ),
+            "size": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Size"}
+            ),
         }
 
 
@@ -101,6 +109,8 @@ class ProductEditForm(forms.ModelForm):
             "brand",
             "image",
             "is_active",
+            "size",
+            "color",
         ]
         widgets = {
             "name": forms.TextInput(
@@ -140,6 +150,12 @@ class ProductEditForm(forms.ModelForm):
             ),
             "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "color": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Color"}
+            ),
+            "size": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Size"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):

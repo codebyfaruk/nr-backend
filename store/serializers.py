@@ -56,11 +56,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_active",
         ]
 
-    def generate_barcode(self, short_name):
-        prefix = "".join(random.choices(string.digits, k=4))
-        suffix = "".join(random.choices(string.digits, k=6))
-        return f"{prefix}{short_name[:4].upper()}{suffix}".upper()
-
     def get_short_name(self, name):
         words = name.split()
         abbreviation = "".join(word[0] for word in words[:3]).upper()
@@ -73,7 +68,7 @@ class ProductSerializer(serializers.ModelSerializer):
         validated_data["short_name"] = short_name
 
         # Generate barcode
-        validated_data["barcode"] = self.generate_barcode(short_name)
+        validated_data["barcode"] = random.choices(string.digits, k=12)
 
         # Calculate discount amount if applicable
         value = validated_data.get("value")

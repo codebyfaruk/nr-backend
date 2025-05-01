@@ -90,6 +90,18 @@
                             {% endif %}
                         </div>
                         <div class="form-group">
+                            <label for="id_color">Color</label>
+                            {{ form.color }}
+                            {% if form.color.errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.color.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
                             <label for="id_is_active">Is Active</label>
                             {{ form.is_active }}
                             {% if form.is_active.errors %}
@@ -146,6 +158,17 @@
                             {% if form.brand.errors %}
                                 <div class="alert alert-danger">
                                     {% for error in form.brand.errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_size">Size</label>
+                            {{ form.size }}
+                            {% if form.size.errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.size.errors %}
                                         <p>{{ error }}</p>
                                     {% endfor %}
                                 </div>
