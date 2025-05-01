@@ -5,8 +5,11 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import TemplateView
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import ModelViewSet
 
+from accounts.filters import CustomerFilter
 from accounts.models import Customer, CustomUser
 from accounts.serializers import CustomerSerializer, UserSerializer
 from store.permissions import IsStaffPermission
@@ -34,6 +37,8 @@ class CustomerViewSet(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [IsStaffPermission]
+    filterset_class = CustomerFilter
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     allow_staff = True
 
 

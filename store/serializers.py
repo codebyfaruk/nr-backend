@@ -101,44 +101,79 @@ class DiscountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# InvoiceItem Serializer
 class InvoiceItemSerializer(serializers.ModelSerializer):
-    product = serializers.StringRelatedField()
+    price_at_purchase = serializers.ReadOnlyField()
+    total_price = serializers.ReadOnlyField()
 
     class Meta:
         model = InvoiceItem
-        fields = ["id", "product", "quantity", "price_at_purchase", "total_price"]
+        fields = [
+            "id",
+            "product_name",
+            "quantity",
+            "rate",
+            "discount_at_purchase",
+            "price_at_purchase",
+            "total_price",
+        ]
 
 
+# Invoice Serializer
 class InvoiceSerializer(serializers.ModelSerializer):
-    customer = serializers.StringRelatedField()
-    items = InvoiceItemSerializer(many=True)
-    amount_due = serializers.SerializerMethodField()
+    customer = (
+        serializers.StringRelatedField()
+    )  # You can replace with a nested serializer if needed
+    items = InvoiceItemSerializer(many=True, read_only=True)  # Nested items
+    discount = serializers.ReadOnlyField()  # Computed discount field
+    amount_due = serializers.ReadOnlyField()  # Computed amount_due field
 
     class Meta:
         model = Invoice
         fields = [
             "id",
+            "invoice_number",
+            "status",
             "customer",
-            "items",
             "subtotal",
-            "product_discount",
             "coupon_discount",
             "loyalty_discount",
             "total",
             "amount_paid",
-            "amount_due",
             "invoice_date",
+            "is_draft",
+            "discount",
+            "amount_due",
+            "items",
         ]
 
-    def get_amount_due(self, obj):
-        return obj.amount_due
-
+    # You may want to override the create and update methods if you need specific logic.
     def create(self, validated_data):
-        items_data = validated_data.pop("items")
+        # Custom create logic if needed
+        items_data = validated_data.pop("items", [])
         invoice = Invoice.objects.create(**validated_data)
         for item_data in items_data:
             InvoiceItem.objects.create(invoice=invoice, **item_data)
         return invoice
+
+    def update(self, instance, validated_data):
+        # Custom update logic if needed
+        items_data = validated_data.pop("items", [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update items (if provided in the request)
+        for item_data in items_data:
+            item_id = item_data.get("id")
+            if item_id:
+                item = InvoiceItem.objects.get(id=item_id, invoice=instance)
+                for attr, value in item_data.items():
+                    setattr(item, attr, value)
+                item.save()
+            else:
+                InvoiceItem.objects.create(invoice=instance, **item_data)
+        return instance
 
 
 class SalesProductSerializer(serializers.ModelSerializer):

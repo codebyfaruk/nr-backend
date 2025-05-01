@@ -25,6 +25,29 @@ class ProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
 
+    @action(detail=True, methods=["post"], url_path="check-discount")
+    def check_discount(self, request, pk=None):
+        try:
+            product = self.get_object()
+            purchase_price = float(product.purchase_price)
+            discount_amount = float(request.data.get("discount_amount", 0))
+            min_allowed_price = purchase_price * 1.10
+
+            discounted_price = float(product.displayed_price) - discount_amount
+
+            if discounted_price < min_allowed_price:
+                return Response(
+                    {"error": "You can't sell this product at this amount."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response({"message": "Discount is valid."})
+
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid discounted price."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
 class DiscountViewSet(viewsets.ModelViewSet):
     queryset = Discount.objects.all()

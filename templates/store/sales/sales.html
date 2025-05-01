@@ -33,9 +33,48 @@
 </style>
 {% endblock extra_css %}
 {% block content %}
-<div class="container mt-4">
-    <div class="row g-3">
+<div class="container">
+    <div class="mb-2 mt-2 card shadow-sm border-0 bg-light">
       <input type="hidden" id="customerId" value=""/>
+      <form id="customerForm" class="row align-items-center card-body g-1">
+        <!-- Phone -->
+        <div class="col-3">
+          <input
+            type="tel"
+            id="customerPhone"
+            name="customerPhone"
+            placeholder="Customer Phone"
+            class="form-control form-control-sm"
+            required
+          />
+        </div>
+
+        <!-- Name -->
+        <div class="col-3">
+          <input
+            type="text"
+            id="customerName"
+            name="customerName"
+            placeholder="Customer Name"
+            class="form-control form-control-sm"
+            required
+          />
+        </div>
+
+        <!-- Address -->
+        <div class="col-6">
+          <input
+            type="text"
+            id="customerAddress"
+            name="customerAddress"
+            placeholder="Address"
+            class="form-control form-control-sm"
+            required
+          />
+        </div>
+      </form>
+    </div>
+    <div class="row g-3">
       <!-- Left: Sales Form -->
       <div class="col-md-4">
         <div class="card shadow-sm h-100">
@@ -79,7 +118,7 @@
           <!-- Table -->
           <div class="card-body p-2 flex-grow-1 overflow-hidden">
             <div class="table-wrapper" style="max-height: 350px; overflow-x: auto;">
-              <table class="table table-sm table-bordered" id="productsTable">
+              <table class="table table-sm table-bordered" id="orderTable">
                 <thead>
                   <tr>
                     <th class="col-1" style="font-size: 0.70rem;">SL</th> <!-- Very small SL column -->
@@ -179,7 +218,7 @@
       let totalQty = 0;
       let totalAmount = 0;
 
-      $('#productsTable tbody tr').each(function () {
+      $('#orderTable tbody tr').each(function () {
         const qty = parseInt($(this).find('td:nth-child(5)').text());
         const amount = parseFloat($(this).find('td:nth-child(6)').text());
         totalQty += qty;
@@ -192,7 +231,7 @@
 
     // Function to add product to the table
     function addProductToTable(product) {
-      const tableBody = $('#productsTable tbody');
+      const tableBody = $('#orderTable tbody');
       const qtyToAdd = parseInt($('#qty').val());
       const discount = parseFloat(product.discount_amount);
       const price = parseFloat(product.displayed_price);
@@ -201,7 +240,7 @@
       let rowUpdated = false;
 
       // Loop through rows to check if product already exists by product ID
-      $('#productsTable tbody tr').each(function () {
+      $('#orderTable tbody tr').each(function () {
         const row = $(this);
         const existingProductId = row.data('id'); // Store product ID in data attribute
 
@@ -270,7 +309,7 @@
 
     // Function to update serial numbers (SL)
     function updateSerialNumbers() {
-      $('#productsTable tbody tr').each(function (index) {
+      $('#orderTable tbody tr').each(function (index) {
         $(this).find('td:first').text(index + 1);  // Assuming SL is in the first <td>
       });
     }
@@ -283,7 +322,7 @@
           if ('roundoff' in value) currentRoundoff = parseFloat(value.roundoff || 0);
       }
 
-      const footer = $('#productsTable tfoot');
+      const footer = $('#orderTable tfoot');
       footer.find('.dynamic-row').remove(); // Remove previous discount/roundoff/grandtotal rows
 
       const totalAmount = parseFloat($('#totalAmount').text()) || 0;
@@ -293,7 +332,7 @@
       if (currentDiscount > 0) {
           $('<tr class="dynamic-row discount-row">')
               .append('<th colspan="5" class="text-end text-muted">Coupon Discount</th>')
-              .append(`<th class="text-danger">- ${currentDiscount.toFixed(2)}</th>`)
+              .append(`<th class="text-danger" id="couponAmountValue">- ${currentDiscount.toFixed(2)}</th>`)
               .append('<th><a href="javascript:void(0);"class="text-danger p-1 removeCouponDiscount"><i class="fas fa-trash-alt"></i></a></th>')
               .insertAfter(footer.find('tr:last'));
       }
@@ -316,6 +355,187 @@
               .insertAfter(footer.find('tr:last'));
       }
     }
+
+    // Function to create a new customer
+    function createCustomer() {
+      const customerId = $("#customerId").val().trim();
+      const phone = $("#customerPhone").val().trim();
+      const name = $("#customerName").val().trim() || null;
+      const address = $("#customerAddress").val().trim() || null;
+
+      if (!phone && (!/^\d{10}$/.test(phone))) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Please enter a valid phone number.',
+        });
+        return;
+      }
+
+      if (customerId) {
+        let customerDetailUrl = "{% url 'api_customer-detail' 'REPLACE_ID' %}".replace('REPLACE_ID', customerId);
+        $.ajax({
+          url: customerDetailUrl,
+          method: "PUT",
+          data: JSON.stringify({ phone, name, address }),
+          contentType: "application/json",
+          success: function (response) {
+            $("#customerId").val(response.id);
+          },
+          error: function (xhr, status, error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops!',
+              text: 'Error updating customer. Please try again.',
+            });
+          }
+        });
+        return;
+      }
+
+      $.ajax({
+        url: '{% url "api_customer-list" %}',
+        method: "POST",
+        data: JSON.stringify({ phone, name, address }),
+        contentType: "application/json",
+        success: function (response) {
+          $("#customerId").val(response.id);
+        },
+        error: function (error) {
+          console.log(error)
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Error creating customer. Please try again.',
+          });
+        }
+      });
+    }
+
+    // To check product discount is highi
+    function checkProductDiscount(productId, discountAmount, callback){
+      let checkProductDiscount = "{% url 'api_product-check-discount' 'REPLACE_ID' %}".replace('REPLACE_ID', productId);
+      $.ajax({
+        url: checkProductDiscount,
+        method: "POST",
+        data: JSON.stringify({ discount_amount: discountAmount }),
+        contentType: "application/json",
+        success: function (response) {
+          if (response.message){
+            callback(true)
+          }
+        },
+        error: function (error) {
+          console.log(error)
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: error.responseJSON.error,
+          });
+          callback(false)
+        }
+      });
+
+    }
+
+    // Function to create a new order object based on table data
+    function createOrder() {
+      let orderDetails = [];
+
+      // Get all the rows in the table body
+      let rows = document.querySelectorAll("#orderTable tbody tr");
+
+      // If no product rows exist, show a warning and exit
+      if (rows.length === 0) {customerId
+          Swal.fire({
+              icon: 'warning',
+              title: 'No Products Added',
+              text: 'Please add at least one product before creating an order.'
+          });
+          return;
+      }
+
+      // Loop through each row and extract product details
+      rows.forEach((row) => {
+          let productName = row.cells[1].innerText;
+          let rate = parseFloat(row.cells[2].innerText);
+          let discount = parseInt(row.cells[3].innerText);
+          let qty = parseInt(row.cells[4].innerText);
+          let totalAmount = parseFloat(row.cells[5].innerText);
+
+          orderDetails.push({
+              productName: productName,
+              rate: rate,
+              discount: discount,
+              qty: qty,
+              totalAmount: totalAmount
+          });
+      });
+
+      // Get the customer ID and coupon code
+      let customerId = $("#customerId").val();
+      let roundoff = $("#roundOffValue").val()?.trim() || null;
+      let couponCode = $("#couponValue").val()?.trim() || null;
+      let couponAmount = null;
+      try {
+          let text = $("#couponAmountValue").text()?.trim();
+          couponAmount = text ? parseInt(text.replace(/^-\s?/, "")) : null;
+      } catch (error) {
+          couponAmount = null;
+      }
+
+      if (!customerId) {
+          Swal.fire({
+              icon: 'error',
+              title: 'Customer Not Found',
+              text: 'Please enter a valid customer phone number.'
+          });
+          return;
+      }
+
+      // Create order data object
+      let orderData = {
+          products: orderDetails,
+          coupon: {couponCode: couponCode, couponAmount: couponAmount},
+          roundoff: roundoff,
+          customerId: customerId,
+      };
+      return orderData;
+    }
+
+    // Handle customer phone input and fetch customer details
+    $("#customerPhone").on("blur", function () {
+      $('#customerId').val('')
+      const phone = $(this).val().trim();
+
+      // Only proceed if phone is exactly 10 digits
+      if (!/^\d{10}$/.test(phone)) return;
+
+      $.ajax({
+        url: "{% url 'api_customer-list' %}", // replace with your actual endpoint
+        method: "GET",
+        data: { phone: phone },
+        success: function (response) {
+          const data = response[0]
+
+          if (data && data.id) {
+            $("#customerId").val(data.id);
+            $("#customerName").val(data.name);
+            $("#customerAddress").val(data.address);
+          } else {
+            $("#customerId").val("");
+            $("#customerName").val("");
+            $("#customerAddress").val("");
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Error fetching customer:", error);
+          $("#customerId").val("");
+          $("#customerName").val("");
+          $("#customerAddress").val("");
+        }
+      });
+    });
 
     // Handle barcode input and fetch product
     $('#barcode').on('keyup', function () {
@@ -354,29 +574,42 @@
 
     // Handle "Add to Table" button click
     $("#addToTableBtn").on("click", function () {
-      const id = $("#id").val().trim();
+      const id = parseFloat($("#id").val().trim());
       const name = $("#name").val().trim();
       const price = parseFloat($("#price").val());
       const qty = parseInt($("#qty").val());
       const discount = parseFloat($("#discount").val());
 
-      if (!barcode || !name || isNaN(price) || isNaN(qty) || isNaN(discount)) {
-        alert("Please fill in all fields correctly.");
+      if (!name || isNaN(price) || isNaN(qty)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Please fill in all fields correctly.',
+        });
         return;
       }
 
       // Create a product object
       const product = {
         id: id,
-        barcode: barcode,
         name: name,
         displayed_price: price,
         discount_amount: discount,
         qty: qty
       };
 
-      addProductToTable(product);
-      updateSerialNumbers();
+      // If product id exist and then fetch the product to check discount
+      if(id){
+        checkProductDiscount(id, discount, function (isValid){
+          if (!isValid){ return;}
+          addProductToTable(product);
+          updateSerialNumbers();
+        })
+      }else{
+        addProductToTable(product);
+        updateSerialNumbers();
+
+      }
     });
 
     // Handle edit button click to edit product quantity and discount
@@ -440,7 +673,19 @@
 
       var roundOffValue = parseFloat($("#roundOffValue").val());
       if (isNaN(roundOffValue)) {
-        alert("Please enter a valid round off value.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Please enter a valid round off value.',
+        });
+        return;
+      }
+      if (roundOffValue > 100){
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Round off amount should less than 100!',
+        });
         return;
       }
       updateFooter({ roundoff: roundOffValue });
@@ -461,38 +706,22 @@
       isRoundOffApplied=false
     });
 
-    $("#createOrderBtn").on("click", function () {
-      var $clonedTable = $("#productsTable").clone();
+    // Create order button click
+    $("#createOrderBtn").on("click", function (){
+      let phone = $("#customerPhone").val().trim();
+      let name = $("#customerName").val().trim();
 
-      // Find the index of the last column (assumed to be "Action")
-      var actionColIndex = $clonedTable.find("thead th").length - 1;
-
-      // Remove the "Action" column header
-      $clonedTable.find("thead tr").each(function () {
-          $(this).find("th").eq(actionColIndex).remove();
-      });
-
-      // Remove the "Action" column from each row
-      $clonedTable.find("tbody tr").each(function () {
-          $(this).find("td").eq(actionColIndex).remove();
-      });
-
-      // Adjust any colspan values
-      $clonedTable.find("[colspan]").each(function () {
-          var currentSpan = parseInt($(this).attr("colspan"), 10);
-          if (currentSpan > 1) {
-              $(this).attr("colspan", currentSpan - 1);
-          }
-      });
-
-      // Convert cleaned table to HTML
-      var tableHTML = $("<div>").append($clonedTable).html();
-      console.log(tableHTML);
-
-      // Store in sessionStorage
-      sessionStorage.setItem("invoiceTable", tableHTML);
-      location.href = "{% url 'invoice' %}";
-    });
+      if (!phone || (!/^\d{10}$/.test(phone) || !name)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Please enter a valid phone number and name.',
+          });
+        return;
+      }
+      createCustomer();
+      console.log(createOrder());
+    })
 
   });
 </script>

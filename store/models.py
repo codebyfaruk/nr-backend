@@ -140,39 +140,51 @@ class Discount(TimeStampedModel, models.Model):
 
 # Invoice model (customer's purchase record)
 class Invoice(TimeStampedModel, models.Model):
+    INVOICE_STATUS_CHOICES = (
+        ("draft", "Draft"),
+        ("paid", "Paid"),
+        ("cancelled", "Cancelled"),
+    )
+    invoice_number = models.CharField(max_length=255, unique=True)
+    status = models.CharField(
+        max_length=10, choices=INVOICE_STATUS_CHOICES, default="draft"
+    )
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="invoices"
     )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # Split discounts
-    product_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     loyalty_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    @property
-    def discount(self):
-        return self.product_discount + self.coupon_discount + self.loyalty_discount
 
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     invoice_date = models.DateTimeField(default=timezone.now)
+    is_draft = models.BooleanField(default=True)
+
+    @property
+    def discount(self):
+        return self.coupon_discount + self.loyalty_discount
 
     @property
     def amount_due(self):
         return max(self.total - self.amount_paid, 0)
 
-    def calculate_totals(self):
-        self.subtotal = sum(item.total_price for item in self.items.all())
-        self.total = self.subtotal - self.discount
-        self.save()
+    def __str__(self):
+        return f"Invoice #{self.invoice_number} - {self.customer.name} ({self.status})"
 
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    product_name = models.CharField(max_length=255)
     quantity = models.PositiveIntegerField(default=1)
-    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+
+    @property
+    def price_at_purchase(self):
+        return self.rate - self.discount_at_purchase
 
     @property
     def total_price(self):
