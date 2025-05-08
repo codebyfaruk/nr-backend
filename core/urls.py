@@ -28,7 +28,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
+from labels.urls import router as labels_router
 from accounts.urls import router as accounts_router
 from accounts.views import CustomLoginView, CustomLogoutView
 from store.urls import router as store_router
@@ -46,6 +46,7 @@ schema_view = get_schema_view(
 router = DefaultRouter()
 router.registry.extend(accounts_router.registry)
 router.registry.extend(store_router.registry)
+router.registry.extend(labels_router.registry)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -74,4 +75,5 @@ urlpatterns = [
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", CustomLogoutView.as_view(), name="logout"),
     path("customer/", include("accounts.urls")),
+    path("label/", include("labels.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

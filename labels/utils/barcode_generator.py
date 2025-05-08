@@ -27,9 +27,6 @@ def generate_base64_barcode(value):
     img = Image.open(buffer)
     img = img.resize((243, 79))  # Resize to fit the required size (in pixels)
 
-    # Rotate the image 90 degrees
-    img = img.rotate(90, expand=True)
-
     # Save the rotated image to buffer again
     buffer = BytesIO()
     img.save(buffer, format="PNG")
