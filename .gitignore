@@ -22,9 +22,6 @@ poetry.lock
 *.pot
 *.pyc
 db.sqlite3
-media/
-staticfiles/
-static/
 
 # VS Code
 .vscode/

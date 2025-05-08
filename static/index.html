@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Label Print Layout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      line-height: 1;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+
+    .label-container {
+      width: 78.6mm;
+      height: 27mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 0;
+      page-break-inside: avoid;
+    }
+
+    .label {
+    width: 38mm;
+    height: 25mm;
+    border: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    font-size: 9px;
+    font-family: sans-serif;
+    padding: 1mm;
+    box-sizing: border-box;
+    }
+
+    .brand {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 1mm 0;
+    border-bottom: 1px dashed #000;
+    }
+
+    .content-area {
+    display: flex;
+    flex: 1;
+    margin-top: 1mm;
+    }
+
+    .info-block {
+    flex: 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    padding-right: 2mm;
+    }
+
+    .product-name {
+    font-weight: 600;
+    font-size: 10px;
+    }
+
+    .size-cell,
+    .price,
+    .offer-price {
+    font-size: 9px;
+    }
+
+    .offer-price {
+    font-weight: bold;
+    color: #b30000;
+    }
+
+    .barcode-block {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .barcode-img {
+    max-height: 100%;
+    transform: rotate(90deg);
+    }
+
+    .btn-container {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 8px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      color: white;
+      background: #007bff;
+    }
+
+    @media print {
+      .btn-container {
+        display: none;
+      }
+
+      @page {
+        size: auto;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <div class="label-container">
+        <div class="label">
+            <div class="brand">NR BAAZAR</div>
+            <div class="content-area">
+              <div class="info-block">
+                <div class="product-name">Fancy Cotton Shirt</div>
+                <div class="size-cell">Sz: XXL &nbsp; Cell: A20</div>
+                <div class="price">Price: ₹1000</div>
+                <div class="offer-price">O. Price: ₹800</div>
+              </div>
+              <div class="barcode-block">
+                <img src="https://via.placeholder.com/60x120?text=|||"
+                     alt="Barcode" class="barcode-img" />
+              </div>
+            </div>
+          </div>
+          <div class="label">
+            <div class="brand">NR BAAZAR</div>
+            <div class="content-area">
+              <div class="info-block">
+                <div class="product-name">Fancy Cotton Shirt</div>
+                <div class="size-cell">Sz: XXL &nbsp; Cell: A20</div>
+                <div class="price">Price: ₹1000</div>
+                <div class="offer-price">O. Price: ₹800</div>
+              </div>
+              <div class="barcode-block">
+                <img src="https://via.placeholder.com/60x120?text=|||"
+                     alt="Barcode" class="barcode-img" />
+              </div>
+            </div>
+          </div>
+    </div>
+
+
+    <div class="label-container">
+      <div class="label">
+        <img src="https://via.placeholder.com/120x80?text=img3.png" alt="Label 3">
+      </div>
+      <div class="label">
+        <img src="https://via.placeholder.com/120x80?text=img4.png" alt="Label 4">
+      </div>
+    </div>
+
+    <div class="label-container">
+      <div class="label">
+        <img src="https://via.placeholder.com/120x80?text=img5.png" alt="Label 5">
+      </div>
+      <div class="label">
+        <!-- Leave blank or add placeholder -->
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-container">
+    <button class="btn" onclick="window.print()">Print Labels</button>
+  </div>
+
+</body>
+</html>
