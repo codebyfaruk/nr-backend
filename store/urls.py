@@ -15,7 +15,6 @@ from store.views.discount import (
     DiscountListView,
     DiscountUpdateView,
 )
-from store.views.labels import PrintLabelView, ProductLableView
 from store.views.product import (
     ProductAddView,
     ProductDetailView,
@@ -43,6 +42,4 @@ urlpatterns = [
     path("coupons/add/", DiscountCreateView.as_view(), name="discount-add"),
     path("coupons/<int:pk>/edit/", DiscountUpdateView.as_view(), name="discount-edit"),
     path("customers/", CustomerListView.as_view(), name="customer_list"),
-    path("labels/", ProductLableView.as_view(), name="labels"),
-    path("products/print-labels/", PrintLabelView.as_view(), name="print_labels"),
 ]

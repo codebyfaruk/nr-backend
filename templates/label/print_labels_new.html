@@ -1,0 +1,185 @@
+{% load label_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Label Print Layout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+
+    .label-container {
+      width: {{ template.total_width }}mm;
+      height: {{ template.total_height }}mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background: white;
+      padding: 0;
+      page-break-inside: avoid;
+    }
+
+    .label {
+      width: {{ template.label_width }}mm;
+      height: {{ template.label_height }}mm;
+      border: 1px solid #000;
+      display: flex;
+      flex-direction: column;
+      padding: 1mm;
+      box-sizing: border-box;
+      justify-content: space-between;
+    }
+
+    .brand {
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .product-name,
+    .size-cell,
+    .price,
+    .cell,
+    .offer-price,
+    .color {
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+    }
+    .small-label .brand{
+        font-size: 15px;
+    }
+
+    .barcode-block {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 1mm;
+    }
+
+    .barcode-img {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .barcode-large {
+      width: 45mm;
+      height: 9mm;
+      object-fit: fill;
+    }
+
+    .barcode-small {
+      width: 34mm;
+      height: 8mm;
+      object-fit: fill;
+    }
+
+    .btn-container {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 8px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      color: white;
+      background: #007bff;
+    }
+
+    @media print {
+      .btn-container {
+        display: none;
+      }
+
+      @page {
+        size: auto;
+        margin: 0;
+      }
+    }
+
+    /* Additional rules only for bigger labels */
+    .big-label .brand {
+      font-size: 20px;
+      margin-bottom: 1mm;
+    }
+
+    .big-label .product-name,
+    .big-label .size-cell,
+    .big-label .price,
+    .big-label .offer-price,
+    .big-label .color  {
+      font-size: 15px;
+      
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    {% with products|flatten_labels as all_labels %}
+      {% for row in all_labels|chunk_by:template.labels_across %}
+        <div class="label-container">
+          {% for product in row %}
+            {% if template.label_height|has_small_height %}
+              <div class="label small-label">
+                <div class="brand">NR BAAZAR</div>
+                {% if product.cell_no %}
+                    <div class="cell">Cell: {{ product.cell_no }} </div>
+                {% endif %}
+                {% if product.displayed_price == product.selling_price %}
+                <div class="offer-price">Price: ₹{{ product.displayed_price }}</div>
+                {% else %}
+                <div class="price" style="text-decoration: line-through; color: gray;">Price: ₹{{ product.displayed_price }}</div>
+                <div class="offer-price">O. Price: ₹{{ product.selling_price }}</div>
+                {% endif %}
+                <div class="barcode-block">
+                  <img src="{{ product.barcode_url }}" alt="Barcode" class="barcode-img barcode-small" />
+                </div>
+              </div>
+            {% else %}
+              <div class="label big-label">
+                <div class="brand">NR BAAZAR</div>
+                <div class="product-name">{{ product.name|shorten_name }}</div>
+                {% if product.color %}<div class="color">Color: {{ product.color }}</div>{% endif %}
+                <div class="size-cell">Size: {{ product.size }} &nbsp; Cell: {{ product.cell_no }}</div>
+                {% if product.displayed_price == product.selling_price %}
+                  <div class="offer-price">Price: ₹{{ product.displayed_price }}</div>
+                {% else %}
+                  <div class="price" style="text-decoration: line-through; color: gray;">Price: ₹{{ product.displayed_price }}</div>
+                  <div class="offer-price">O. Price: ₹{{ product.selling_price }}</div>
+                {% endif %}
+                <div class="barcode-block">
+                  <img src="{{ product.barcode_url }}" alt="Barcode" class="barcode-img barcode-large" />
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <div class="btn-container">
+    <button class="btn" onclick="window.print()">Print Labels</button>
+  </div>
+
+</body>
+</html>
