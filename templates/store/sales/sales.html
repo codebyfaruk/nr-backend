@@ -191,6 +191,51 @@
     </div>
 </div>
 <meta name="csrf-token" content="{{ csrf_token }}">
+
+{% comment %} Modal {% endcomment %}
+<!-- Invoice Draft Modal -->
+<div class="modal fade" id="draftInvoiceModal" tabindex="-1" aria-labelledby="draftInvoiceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-3 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="draftInvoiceModalLabel">Existing Draft Invoice</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">A draft invoice already exists for this customer. Please review the details below:</p>
+
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Product Name</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Discount</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="draftInvoiceItemsTable">
+            <!-- JS will insert rows here -->
+          </tbody>
+        </table>
+
+        <div class="d-flex justify-content-end">
+          <div class="text-end">
+            <p><strong>Subtotal:</strong> ₹<span id="draftSubtotal"></span></p>
+            <p><strong>Coupon Discount:</strong> ₹<span id="draftCouponDiscount"></span></p>
+            <p><strong>Loyalty Discount:</strong> ₹<span id="draftLoyaltyDiscount"></span></p>
+            <p><strong>Total:</strong> ₹<span id="draftTotalAmount"></span></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Create New</button>
+        <button id="continueDraftBtn" type="button" class="btn btn-success">Yes, Continue Draft</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -518,6 +563,8 @@
 
       // Clear Order Table
       $("#orderTable tbody").empty();  // Clear all rows in the table
+      const footer = $('#orderTable tfoot');
+      footer.find('.dynamic-row').remove();
 
       // Reset Total fields in table footer
       $("#totalQty").text("0");
@@ -580,6 +627,36 @@
       });
     }
 
+    function showDraftInvoiceModal(invoice) {
+      const items = invoice.items || [];
+
+      let tableRows = '';
+      items.forEach(item => {
+        const total = item.rate * item.quantity - item.discount_at_purchase;
+        tableRows += `
+          <tr>
+            <td>${item.product_name}</td>
+            <td>${item.quantity}</td>
+            <td>₹${item.rate}</td>
+            <td>₹${item.discount_at_purchase}</td>
+            <td>₹${total}</td>
+          </tr>`;
+      });
+
+      $("#draftInvoiceItemsTable").html(tableRows);
+      $("#draftSubtotal").text(invoice.subtotal);
+      $("#draftCouponDiscount").text(invoice.coupon_discount);
+      $("#draftLoyaltyDiscount").text(invoice.loyalty_discount);
+      $("#draftTotalAmount").text(invoice.total);
+
+      // Store invoice ID for further use
+      $("#continueDraftBtn").data("invoiceId", invoice.id);
+
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById("draftInvoiceModal"));
+      modal.show();
+    }
+
     // Handle customer phone input and fetch customer details
     $("#customerPhone").on("blur", function () {
       $('#customerId').val('')
@@ -589,24 +666,23 @@
       if (!/^\d{10}$/.test(phone)) return;
 
       $.ajax({
-        url: "{% url 'api_customer-list' %}", // replace with your actual endpoint
+        url: "{% url 'api_invoice-customer-details' %}", // replace with your actual endpoint
         method: "GET",
         data: { phone: phone },
         success: function (response) {
-          const data = response[0]
+          const customer = response.customer;
+          if (customer && customer.id) {
+            $("#customerId").val(customer.id);
+            $("#customerName").val(customer.name);
+            $("#customerAddress").val(customer.address);
 
-          if (data && data.id) {
-            $("#customerId").val(data.id);
-            $("#customerName").val(data.name);
-            $("#customerAddress").val(data.address);
-          } else {
-            $("#customerId").val("");
-            $("#customerName").val("");
-            $("#customerAddress").val("");
+            if (response.draft_invoice) {
+              showDraftInvoiceModal(response.draft_invoice);              
+            }
           }
         },
         error: function (xhr, status, error) {
-          console.error("Error fetching customer:", error);
+          console.error("Error fetching customer or invoice:", error);
           $("#customerId").val("");
           $("#customerName").val("");
           $("#customerAddress").val("");
@@ -792,6 +868,7 @@
     // Draft
     $("#createDraftBtn").on("click", function () {
       orderData = createOrder()
+      console.log(orderData)
       submitOrder(orderData, true);
     });
 

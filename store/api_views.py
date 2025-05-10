@@ -17,6 +17,7 @@ from store.serializers import (
     ProductSerializer,
     SalesProductSerializer,
 )
+from accounts.serializers import CustomerSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -126,20 +127,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         customer_id = payload.get("customerId")
         products = payload.get("products", [])
         coupon = payload.get("coupon", {})
-        coupon_amount = coupon.get("couponAmount") or 0
-        loyalty_discount = payload.get("roundoff") or 0
+        coupon_amount = float(coupon.get("couponAmount") or 0)
+        loyalty_discount = float(payload.get("roundoff") or 0)
 
         try:
             customer = Customer.objects.get(id=customer_id)
         except Customer.DoesNotExist:
             return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        subtotal = sum(p['rate'] * p['qty'] for p in products)
-        total_discount = sum(p['discount'] for p in products) + coupon_amount + loyalty_discount
+        subtotal = sum(float((p['rate'])- float(p['discount'])) * p['qty'] for p in products)
+        total_discount = sum(float(p['discount']) for p in products) + coupon_amount + loyalty_discount
         total = subtotal - total_discount
 
         invoice = Invoice.objects.create(
-            invoice_number=str(uuid.uuid4().int)[:8],
+            invoice_number="INV-"+str(uuid.uuid4().int)[:8],
             customer=customer,
             subtotal=subtotal,
             coupon_discount=coupon_amount,
@@ -161,3 +162,24 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(invoice)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'], url_name='customer-details')
+    def get_customer_with_draft(self, request):
+        phone = request.query_params.get('phone')
+        if not phone:
+            return Response({"error": "Phone number is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            customer = Customer.objects.get(phone=phone)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        draft_invoice = Invoice.objects.filter(customer=customer, is_draft=True).prefetch_related('items').first()
+
+        customer_data = CustomerSerializer(customer).data
+        invoice_data = InvoiceSerializer(draft_invoice).data if draft_invoice else None
+
+        return Response({
+            "customer": customer_data,
+            "draft_invoice": invoice_data
+        }, status=status.HTTP_200_OK)
