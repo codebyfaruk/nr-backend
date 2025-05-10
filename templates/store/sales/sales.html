@@ -180,7 +180,10 @@
                     <label class="form-check-label fw-semibold ms-2" for="togglePromo">Open Offer</label>
                     </div>
                     <!-- Create Order Button -->
-                    <button type="button" class="btn btn-sm btn-primary" id="createOrderBtn">Create Order</button>
+                     <div>
+                      <button type="button" class="btn btn-sm btn-warning" id="createDraftBtn">Draft</button>
+                      <button type="button" class="btn btn-sm btn-primary" id="createOrderBtn">Create Order</button>
+                     </div>
                 </div>
             </div>
         </div>
@@ -478,7 +481,7 @@
       let couponCode = $("#couponValue").val()?.trim() || null;
       let couponAmount = null;
       try {
-          let text = $("#couponAmountValue").text()?.trim();
+          let text = $("#couponAmountValue").text()?.trim() || null;
           couponAmount = text ? parseInt(text.replace(/^-\s?/, "")) : null;
       } catch (error) {
           couponAmount = null;
@@ -501,6 +504,80 @@
           customerId: customerId,
       };
       return orderData;
+    }
+
+    // Function to clear all fields on the page using jQuery
+    function clearAllFields() {
+      // Clear Customer Form
+      $("#customerForm")[0].reset();  // Reset all form fields in customerForm
+      $("#customerId").val("");  // Clear customer ID
+
+      // Clear Sales Form
+      $("#salesForm")[0].reset();  // Reset all form fields in salesForm
+      $("#id").val("");  // Clear hidden ID field in salesForm
+
+      // Clear Order Table
+      $("#orderTable tbody").empty();  // Clear all rows in the table
+
+      // Reset Total fields in table footer
+      $("#totalQty").text("0");
+      $("#totalAmount").text("0.00");
+
+      // Hide promo fields and reset them
+      $("#promoFields").hide();
+      $("#couponValue").val("");
+      $("#roundOffValue").val("");
+
+      // Reset toggle switch for promo fields
+      $("#togglePromo").prop("checked", false);
+    }
+
+    // Order create function
+    function submitOrder(orderData, isDraft = false) {
+      let phone = $("#customerPhone").val().trim();
+      let name = $("#customerName").val().trim();
+    
+      if (!phone || !/^\d{10}$/.test(phone) || !name) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Please enter a valid phone number and name.',
+        });
+        return;
+      }
+    
+      // This assumes you handle customer creation separately
+      createCustomer();
+    
+      $.ajax({
+        url: "{% url 'api_invoice-list' %}",
+        method: "POST",
+        data: JSON.stringify(orderData),
+        contentType: "application/json",
+        success: function (response) {
+          if (response.invoice_number){
+            if (isDraft) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Draft Saved',
+                text: 'Your draft order has been saved successfully.',
+              });
+            } else {
+              // Redirect to a page (adjust URL as needed)
+              window.location.href = `/orders/${response.id}/details/`;
+            }
+            clearAllFields()
+          }
+          
+        },
+        error: function (xhr, status, error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Something went wrong!',
+          });
+        }
+      });
     }
 
     // Handle customer phone input and fetch customer details
@@ -707,21 +784,16 @@
     });
 
     // Create order button click
-    $("#createOrderBtn").on("click", function (){
-      let phone = $("#customerPhone").val().trim();
-      let name = $("#customerName").val().trim();
-
-      if (!phone || (!/^\d{10}$/.test(phone) || !name)) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops!',
-            text: 'Please enter a valid phone number and name.',
-          });
-        return;
-      }
-      createCustomer();
-      console.log(createOrder());
-    })
+    $("#createOrderBtn").on("click", function () {
+      orderData = createOrder()
+      submitOrder(orderData, false);
+    });
+    
+    // Draft
+    $("#createDraftBtn").on("click", function () {
+      orderData = createOrder()
+      submitOrder(orderData, true);
+    });
 
   });
 </script>

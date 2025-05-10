@@ -5,6 +5,8 @@ from django.views.generic import TemplateView
 from store.models import Product
 from labels.utils.barcode_generator import generate_base64_barcode
 from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, UpdateView
+from django.urls import reverse_lazy
 
 class LabelTemplateViewSet(viewsets.ModelViewSet):
     queryset = LabelTemplate.objects.all()
@@ -56,4 +58,17 @@ class PrintLabelView(TemplateView):
         context["products"] = products
         context['template'] = template
         return context
+    
+
+class LabelTemplateListView(ListView):
+    model = LabelTemplate
+    template_name = 'label/list.html'
+    context_object_name = 'templates'
+
+class LabelTemplateUpdateView(UpdateView):
+    model = LabelTemplate
+    fields = '__all__' 
+    template_name = 'label/edit.html'
+    success_url = reverse_lazy('label_template_list')
+
 

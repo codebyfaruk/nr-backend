@@ -3,10 +3,11 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-
+from rest_framework.parsers import JSONParser
+import uuid
 from accounts.models import Customer
 from store.filters import ProductFilter
-from store.models import Category, Discount, Invoice, Product
+from store.models import Category, Discount, Invoice, Product, InvoiceItem
 from store.permissions import IsStaffPermission
 from store.serializers import (
     ApplyCouponSerializer,
@@ -95,13 +96,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsStaffPermission]
 
-
-class InvoiceViewSet(viewsets.ModelViewSet):
-    queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializer
-    permission_classes = [IsStaffPermission]
-
-
 class SalesProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True, stock_quantity__gt=0)
     serializer_class = SalesProductSerializer
@@ -118,3 +112,52 @@ class SalesProductViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
         return super().list(request, *args, **kwargs)
+    
+class InvoiceViewSet(viewsets.ModelViewSet):
+    queryset = Invoice.objects.all().prefetch_related('items', 'customer')
+    serializer_class = InvoiceSerializer
+    parser_classes = [JSONParser]
+
+    def create(self, request, *args, **kwargs):
+        if not request.data:
+            return Response({"error": "No data provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        payload = request.data
+        customer_id = payload.get("customerId")
+        products = payload.get("products", [])
+        coupon = payload.get("coupon", {})
+        coupon_amount = coupon.get("couponAmount") or 0
+        loyalty_discount = payload.get("roundoff") or 0
+
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        subtotal = sum(p['rate'] * p['qty'] for p in products)
+        total_discount = sum(p['discount'] for p in products) + coupon_amount + loyalty_discount
+        total = subtotal - total_discount
+
+        invoice = Invoice.objects.create(
+            invoice_number=str(uuid.uuid4().int)[:8],
+            customer=customer,
+            subtotal=subtotal,
+            coupon_discount=coupon_amount,
+            loyalty_discount=loyalty_discount,
+            total=total,
+            amount_paid=0,
+            status="draft",
+            is_draft=True,
+        )
+
+        for item in products:
+            InvoiceItem.objects.create(
+                invoice=invoice,
+                product_name=item['productName'],
+                quantity=item['qty'],
+                rate=item['rate'],
+                discount_at_purchase=item['discount'],
+            )
+
+        serializer = self.get_serializer(invoice)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
