@@ -28,117 +28,7 @@
       </div>
     </div>
   </div>
-  <meta name="csrf-token" content="{{ csrf_token }}">
-  <!-- Label Template Modal -->
-<div class="modal fade" id="labelTemplateModal" tabindex="-1" aria-labelledby="labelTemplateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <form id="labelTemplateForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="labelTemplateModalLabel">Add Label Template</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-  
-          <div class="modal-body">
-            <!-- Section 1: Name -->
-            <div class="row mb-3">
-              <div class="col-md-12">
-                <label for="templateName" class="form-label">Template Name</label>
-                <input type="text" class="form-control" id="templateName" name="name" required>
-              </div>
-            </div>
-  
-            <!-- Section 2: Paper Layout -->
-            <h6 class="mb-3">Paper Layout</h6>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Width</label>
-                <input type="number" step="0.01" class="form-control" name="total_width">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Height</label>
-                <input type="number" step="0.01" class="form-control" name="total_height">
-              </div>
-            </div>
-  
-            <!-- Section 3: Labels Layout -->
-            <h6 class="mb-3">Labels Layout</h6>
-            <div class="row mb-2">
-              <div class="col-md-6">
-                <label class="form-label">Label Width</label>
-                <input type="number" step="0.01" class="form-control" name="label_width" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Label Height</label>
-                <input type="number" step="0.01" class="form-control" name="label_height" required>
-              </div>
-            </div>
-            
-            <h6 class="mb-3">Corner Redious</h6>
-            <div class="row mb-2">
-              <div class="col-md-3">
-                <label class="form-label">Top-Left</label>
-                <input type="number" step="0.01" class="form-control" name="round_top_left" value="0.2">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Top-Right</label>
-                <input type="number" step="0.01" class="form-control" name="round_top_right" value="0.2">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Bottom-Left</label>
-                <input type="number" step="0.01" class="form-control" name="round_bottom_left" value="0.2">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Bottom-Right</label>
-                <input type="number" step="0.01" class="form-control" name="round_bottom_right" value="0.2" >
-              </div>
-            </div>
-            
-            <h6 class="mb-3">Labels Gaps</h6>
-            <div class="row mb-3">
-              <div class="col-md-3">
-                <label class="form-label">Left</label>
-                <input type="number" step="0.01" class="form-control" name="gap_left" value="1">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Right</label>
-                <input type="number" step="0.01" class="form-control" name="gap_right" value="1">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Top</label>
-                <input type="number" step="0.01" class="form-control" name="gap_top" value="1">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Bottom</label>
-                <input type="number" step="0.01" class="form-control" name="gap_bottom" value="1">
-              </div>
-            </div>
-  
-            <!-- Section 4: Settings -->
-            <h6 class="mb-3">Settings</h6>
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Labels Across</label>
-                <input type="number" class="form-control" name="labels_across" value="1">
-              </div>
-              <div class="col-md-6 d-flex align-items-center">
-                <div class="form-check mt-3">
-                  <input class="form-check-input" style="width: 20px;height: 20px;" type="checkbox" name="is_default" id="isDefault">
-                  <label class="form-check-label" for="isDefault">Set as Default Template</label>
-                </div>
-              </div>
-            </div>
-  
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success" id="modalSubmit">Save Template</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  
+  <meta name="csrf-token" content="{{ csrf_token }}"> 
 {% endblock content %}
 {% block extra_js %}
 <script>
@@ -236,9 +126,6 @@
                 <select id="labelTemplate" class="form-select form-select-sm" style="width: auto;">
                     <option value="">Select Label Template</option>
                 </select>
-                <button id="openTemplateModal" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#labelTemplateModal">
-                    Add New
-                </button>
                 <button id="printLabels" class="btn btn-success btn-sm">Print Labels</button>
             </div>
         `);
@@ -249,43 +136,6 @@
         $('#productTable').on('change', '#selectAll', function() {
           $('.product-checkbox').prop('checked', this.checked);
         });
-
-        $("#modalSubmit").on('click', function(e){
-            e.preventDefault()
-            const formArray = $('#labelTemplateForm').serializeArray();
-            const formData = {};
-
-            $.each(formArray, function () {
-                formData[this.name] = this.value;
-            });
-            
-            $.ajax({
-                url: "{% url 'api_labels-list' %}",
-                method: "POST",
-                data: JSON.stringify(formData),
-                contentType: "application/json",
-                success: function (response) {
-                    if (response.id) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Template added successfully!',
-                        });
-                
-                        $('#labelTemplateModal').modal('hide');
-                        $('#labelTemplateForm')[0].reset();
-                        fetchTemplate(); 
-                    }
-                },
-                error: function (error) {
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Oops!',
-                    text: 'Error updating customer. Please try again.',
-                  });
-                }
-              });
-        })
 
         $('#printLabels').click(function () {
             const ids = $('.product-checkbox:checked').map(function () {
