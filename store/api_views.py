@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 import uuid
 from accounts.models import Customer
-from store.filters import ProductFilter
+from store.filters import ProductFilter, SalesProfitFilter
 from store.models import Category, Discount, Invoice, Product, InvoiceItem
 from store.permissions import IsStaffPermission
 from store.serializers import (
@@ -162,3 +162,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(invoice)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+class SalesProfitViewSet(viewsets.ViewSet):
+    def list(self, request):
+        # Apply filter based on the query params (start_date, end_date, period)
+        queryset = InvoiceItem.objects.all()
+        filtered_queryset = SalesProfitFilter(request.query_params, queryset=queryset).qs
+        
+        # Prepare the response data
+        data = []
+        for item in filtered_queryset:
+            data.append({
+                'period': item['period'],
+                'total_profit': item['total_profit'] or 0,
+                'total_investment': item['total_investment'] or 0,
+            })
+
+        return Response(data)

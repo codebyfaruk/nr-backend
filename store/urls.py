@@ -7,6 +7,7 @@ from store.api_views import (
     InvoiceViewSet,
     ProductViewSet,
     SalesProductViewSet,
+    SalesProfitViewSet,
 )
 from store.views.customer import CustomerListView
 from store.views.dashboard import DashboardView
@@ -29,6 +30,7 @@ router.register(r"categories", CategoryViewSet, basename="api_category")
 router.register(r"discounts", DiscountViewSet, basename="api_discount")
 router.register(r"invoices", InvoiceViewSet, basename="api_invoice")
 router.register(r"sales-product", SalesProductViewSet, basename="api_sales_product")
+router.register(r'sales-profit', SalesProfitViewSet, basename='sales_profit')
 
 urlpatterns = [
     path("", DashboardView.as_view(), name="home"),
