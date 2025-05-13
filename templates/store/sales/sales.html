@@ -606,7 +606,7 @@
               });
             } else {
               // Redirect to a page (adjust URL as needed)
-              window.location.href = `/orders/${response.id}/details/`;
+              window.location.href = "{% url 'invoice' 0 %}".replace(0, response.id);
             }
           }
           

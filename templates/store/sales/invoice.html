@@ -1,89 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Invoice</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print {
-      body.custom-width {
-        width: var(--custom-width);
-        font-size: 12px;
-        margin: 0;
-        padding: 0;
-      }
+{% extends 'layout/base.html' %}
 
-      .no-print {
-        display: none;
-      }
-    }
-  </style>
-</head>
-<body class="bg-gray-100 p-4">
+{% block extra_css %}
+<style>
+  .invoice-box {
+    background: #fff;
+    padding: 25px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+  .invoice-header {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+  }
+  .table th, .table td {
+    vertical-align: middle;
+  }
+  .summary-table th {
+    width: 60%;
+  }
+  .summary-table td {
+    text-align: right;
+  }
+</style>
+{% endblock %}
 
-  <div class="max-w-3xl mx-auto bg-white shadow-lg p-6 rounded">
-    <div class="flex justify-between items-center mb-4 no-print">
-      <h1 class="text-2xl font-bold">Invoice</h1>
-      <div class="flex items-center space-x-4">
-        <label for="paperWidth" class="font-medium">Select Width (mm):</label>
-        <select id="paperWidth" class="border px-2 py-1">
-          <!-- Options from 50 to 80 mm in 5mm steps -->
-          <script>
-            window.addEventListener('DOMContentLoaded', () => {
-              const select = document.getElementById("paperWidth");
-              for (let i = 50; i <= 80; i += 5) {
-                const option = document.createElement("option");
-                option.value = i;
-                option.textContent = `${i} mm`;
-                select.appendChild(option);
-              }
-            });
-          </script>
-        </select>
-        <button onclick="applyWidth()" class="bg-green-600 text-white px-4 py-2 rounded">
-          Apply
-        </button>
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-10 offset-lg-1">
+      <div class="invoice-box">
+        <div class="invoice-header d-flex justify-content-between align-items-center">
+          <h4>Invoice #{{ invoice.invoice_number }}</h4>
+          <small class="text-muted">{{ invoice.invoice_date|date:"Y-m-d H:i" }}</small>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="mb-4">
+          <h6>Customer Details</h6>
+          <p><strong>Name:</strong> {{ invoice.customer.name }}</p>
+          <p><strong>Phone:</strong> {{ invoice.customer.phone }}</p>
+          <p><strong>Address:</strong> {{ invoice.customer.address }}</p>
+        </div>
+
+        <!-- Item Table -->
+        <h6>Purchased Items</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Discount</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in invoice.items.all %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product.short_name|default:item.product_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.rate }}</td>
+                <td>₹{{ item.discount_at_purchase }}</td>
+                <td>₹{{ item.price_at_purchase }}</td>
+                <td>₹{{ item.total_price }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payment & Summary -->
+        <div class="row mt-4">
+          <!-- Payment Form -->
+          <div class="col-md-6">
+            <h6>Payment Details</h6>
+            <form method="POST">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="paymentType" class="form-label">Payment Method</label>
+                <select class="form-select" id="paymentType" name="payment_type">
+                  <option value="cash" {% if invoice.payment_type == 'cash' %}selected{% endif %}>Cash</option>
+                  <option value="card" {% if invoice.payment_type == 'card' %}selected{% endif %}>Card</option>
+                  <option value="online" {% if invoice.payment_type == 'online' %}selected{% endif %}>Online</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="amountPaid" class="form-label">Amount Paid</label>
+                <input type="number" step="0.01" id="amountPaid" name="amount_paid" class="form-control"
+                       value="{{ invoice.amount_paid }}">
+              </div>
+              <button class="btn btn-success">Update Payment</button>
+            </form>
+          </div>
+
+          <!-- Invoice Summary -->
+          <div class="col-md-6">
+            <h6>Invoice Summary</h6>
+            <table class="table summary-table">
+              <tr>
+                <th>Subtotal</th>
+                <td>₹{{ invoice.subtotal }}</td>
+              </tr>
+              <tr>
+                <th>Coupon Discount</th>
+                <td>− ₹{{ invoice.coupon_discount }}</td>
+              </tr>
+              <tr>
+                <th>Loyalty Discount</th>
+                <td>− ₹{{ invoice.loyalty_discount }}</td>
+              </tr>
+              <tr>
+                <th>Total</th>
+                <td><strong>₹{{ invoice.total }}</strong></td>
+              </tr>
+              <tr>
+                <th>Amount Paid</th>
+                <td>₹{{ invoice.amount_paid }}</td>
+              </tr>
+              <tr>
+                <th>Amount Due</th>
+                <td>₹{{ invoice.amount_due }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="invoiceTableWrapper" class="mb-4">
-        <table id="invoiceTable" class="w-full table-auto border mb-4">
-        <thead class="bg-gray-200">
-            <tr>
-            <th class="border px-2 py-1">Item</th>
-            <th class="border px-2 py-1">Qty</th>
-            <th class="border px-2 py-1">Rate</th>
-            <th class="border px-2 py-1">Total</th>
-            </tr>
-        </thead>
-        <tbody id="invoiceBody"></tbody>
-        </table>
-    </div>
-
-    <div class="text-right font-bold" id="totalAmount"></div>
-
-    <div class="mt-6 flex justify-end no-print">
-      <button onclick="printInvoice()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        Print Invoice
-      </button>
-    </div>
   </div>
-
-  <script>
-    function loadInvoiceData() {
-        const tableHTML = sessionStorage.getItem("invoiceTable");
-        const wrapper = document.getElementById("invoiceTableWrapper");
-
-        if (tableHTML) {
-          wrapper.innerHTML = tableHTML;
-        } else {
-          wrapper.innerHTML = "<p>No invoice data found.</p>";
-        }
-      }
-
-      // Call it on page load
-      document.addEventListener("DOMContentLoaded", loadInvoiceData);
-
-  </script>
-
-</body>
-</html>
+</div>
+{% endblock %}

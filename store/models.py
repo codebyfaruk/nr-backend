@@ -147,6 +147,11 @@ class Invoice(TimeStampedModel, models.Model):
         ("paid", "Paid"),
         ("cancelled", "Cancelled"),
     )
+    PAYMENT_TYPE_CHOICES = (
+        ('online', 'Online'),
+        ('cash', 'Cash'),
+        ('card', 'Card')
+    )
     invoice_number = models.CharField(max_length=255, unique=True)
     status = models.CharField(
         max_length=10, choices=INVOICE_STATUS_CHOICES, default="draft"
@@ -164,6 +169,10 @@ class Invoice(TimeStampedModel, models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     invoice_date = models.DateTimeField(default=timezone.now)
     is_draft = models.BooleanField(default=True)
+
+    payment_type = models.CharField(
+        max_length=10, choices=PAYMENT_TYPE_CHOICES, null=True, blank=True
+    )
 
     @property
     def discount(self):
