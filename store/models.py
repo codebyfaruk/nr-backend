@@ -183,6 +183,7 @@ class InvoiceItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     discount_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name="items")
 
     @property
     def price_at_purchase(self):
@@ -193,4 +194,4 @@ class InvoiceItem(models.Model):
         return self.quantity * self.price_at_purchase
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.short_name or self.product.name} (Invoice #{self.invoice.id})"
+        return f"{self.quantity} x {self.product.short_name or self.product_name} (Invoice #{self.invoice.invoice_number})"

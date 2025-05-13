@@ -157,6 +157,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 quantity=item['qty'],
                 rate=item['rate'],
                 discount_at_purchase=item['discount'],
+                product= Product.objects.get(id=item['id']) if item['id'] else None
             )
 
         serializer = self.get_serializer(invoice)

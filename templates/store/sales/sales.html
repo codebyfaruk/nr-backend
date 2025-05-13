@@ -460,6 +460,7 @@
 
       // Loop through each row and extract product details
       rows.forEach((row) => {
+          let id = row.getAttribute('data-id');
           let productName = row.cells[1].innerText;
           let rate = parseFloat(row.cells[2].innerText);
           let discount = parseInt(row.cells[3].innerText);
@@ -467,6 +468,7 @@
           let totalAmount = parseFloat(row.cells[5].innerText);
 
           orderDetails.push({
+              id: id,
               productName: productName,
               rate: rate,
               discount: discount,
