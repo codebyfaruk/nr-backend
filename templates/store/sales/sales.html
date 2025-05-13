@@ -404,57 +404,72 @@
       }
     }
 
-    // Function to create a new customer
-    function createCustomer() {
-      const customerId = $("#customerId").val().trim();
-      const phone = $("#customerPhone").val().trim();
-      const name = $("#customerName").val().trim() || null;
-      const address = $("#customerAddress").val().trim() || null;
+    // Function to create or update a customer
+    async function createCustomer() {
+      return new Promise((resolve, reject) => {
+        const customerId = $("#customerId").val().trim();
+        const phone = $("#customerPhone").val().trim();
+        const name = $("#customerName").val().trim() || null;
+        const address = $("#customerAddress").val().trim() || null;
 
-      if (!phone && (!/^\d{10}$/.test(phone))) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops!',
-          text: 'Please enter a valid phone number.',
-        });
-        return;
-      }
-
-      if (customerId) {
-        let customerDetailUrl = "{% url 'api_customer-detail' 'REPLACE_ID' %}".replace('REPLACE_ID', customerId);
-        $.ajax({
-          url: customerDetailUrl,
-          method: "PUT",
-          data: JSON.stringify({ phone, name, address }),
-          contentType: "application/json",
-          success: function (response) {
-            $("#customerId").val(response.id);
-          },
-          error: function (xhr, status, error) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Oops!',
-              text: 'Error updating customer. Please try again.',
-            });
-          }
-        });
-        return;
-      }
-
-      $.ajax({
-        url: '{% url "api_customer-list" %}',
-        method: "POST",
-        data: JSON.stringify({ phone, name, address }),
-        contentType: "application/json",
-        success: function (response) {
-          $("#customerId").val(response.id);
-        },
-        error: function (error) {
-          console.log(error)
+        if (!phone || !/^\d{10}$/.test(phone)) {
           Swal.fire({
             icon: 'error',
             title: 'Oops!',
-            text: 'Error creating customer. Please try again.',
+            text: 'Please enter a valid phone number.',
+          });
+          return reject("Invalid phone number");
+        }
+
+        if (!name) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: 'Please provide a valid name!',
+          });
+          return reject("Invalid name");
+        }
+
+        const customerData = { phone, name, address };
+
+        if (customerId) {
+          const customerDetailUrl = "{% url 'api_customer-detail' 'REPLACE_ID' %}".replace('REPLACE_ID', customerId);
+          $.ajax({
+            url: customerDetailUrl,
+            method: "PUT",
+            data: JSON.stringify(customerData),
+            contentType: "application/json",
+            success: function (response) {
+              $("#customerId").val(response.id);
+              resolve(response); // ✅ resolve with response
+            },
+            error: function () {
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Error updating customer. Please try again.',
+              });
+              reject("Error updating customer"); // ✅ reject on error
+            }
+          });
+        } else {
+          $.ajax({
+            url: '{% url "api_customer-list" %}',
+            method: "POST",
+            data: JSON.stringify(customerData),
+            contentType: "application/json",
+            success: function (response) {
+              $("#customerId").val(response.id);
+              resolve(response); // ✅ resolve with response
+            },
+            error: function () {
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Error creating customer. Please try again.',
+              });
+              reject("Error creating customer"); // ✅ reject on error
+            }
           });
         }
       });
@@ -487,7 +502,9 @@
     }
 
     // Function to create a new order object based on table data
-    function createOrder() {
+    async function createOrder() {    
+      // This assumes you handle customer creation separately
+      await createCustomer();
       let orderDetails = [];
 
       // Get all the rows in the table body
@@ -533,16 +550,6 @@
       } catch (error) {
           couponAmount = null;
       }
-
-      if (!customerId) {
-          Swal.fire({
-              icon: 'error',
-              title: 'Customer Not Found',
-              text: 'Please enter a valid customer phone number.'
-          });
-          return;
-      }
-
       // Create order data object
       let orderData = {
           products: orderDetails,
@@ -582,22 +589,7 @@
     }
 
     // Order create function
-    function submitOrder(orderData, isDraft = false) {
-      let phone = $("#customerPhone").val().trim();
-      let name = $("#customerName").val().trim();
-    
-      if (!phone || !/^\d{10}$/.test(phone) || !name) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops!',
-          text: 'Please enter a valid phone number and name.',
-        });
-        return;
-      }
-    
-      // This assumes you handle customer creation separately
-      createCustomer();
-    
+    async function submitOrder(orderData, isDraft = false) {    
       $.ajax({
         url: "{% url 'api_invoice-list' %}",
         method: "POST",
@@ -605,6 +597,7 @@
         contentType: "application/json",
         success: function (response) {
           if (response.invoice_number){
+            clearAllFields()
             if (isDraft) {
               Swal.fire({
                 icon: 'success',
@@ -615,7 +608,6 @@
               // Redirect to a page (adjust URL as needed)
               window.location.href = `/orders/${response.id}/details/`;
             }
-            clearAllFields()
           }
           
         },
@@ -862,16 +854,33 @@
     });
 
     // Create order button click
-    $("#createOrderBtn").on("click", function () {
-      orderData = createOrder()
-      submitOrder(orderData, false);
+    $("#createOrderBtn").on("click", async function () {
+      try {
+        const orderData = await createOrder();
+        await submitOrder(orderData, false);
+      } catch (error) {
+        console.error("Error creating or submitting order:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Something went wrong while saving create order.',
+        });
+      }
     });
     
     // Draft
-    $("#createDraftBtn").on("click", function () {
-      orderData = createOrder()
-      console.log(orderData)
-      submitOrder(orderData, true);
+    $("#createDraftBtn").on("click", async function () {
+      try {
+        const orderData = await createOrder();
+        await submitOrder(orderData, true);
+      } catch (error) {
+        console.error("Error creating or submitting order:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: 'Something went wrong while saving the draft.',
+        });
+      }
     });
 
   });
