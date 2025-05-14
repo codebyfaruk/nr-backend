@@ -20,6 +20,8 @@ dependencies = [
     "django-filter (>=25.1,<26.0)",
     "python-barcode (>=0.15.1,<0.16.0)",
     "django-extensions (>=4.1,<5.0)",
+    "pytest-django (>=4.11.1,<5.0.0)",
+    "pytest-cov (>=6.1.1,<7.0.0)",
 ]
 package-mode = false
 
