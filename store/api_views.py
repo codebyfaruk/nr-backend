@@ -129,6 +129,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         coupon = payload.get("coupon", {})
         coupon_amount = float(coupon.get("couponAmount") or 0)
         loyalty_discount = float(payload.get("roundoff") or 0)
+        amount_paid = float(payload.get("paidAmount") or 0)
+        payment_type = payload.get("paymentType")
 
         try:
             customer = Customer.objects.get(id=customer_id)
@@ -136,19 +138,28 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
         subtotal = sum(float((p['rate'])- float(p['discount'])) * p['qty'] for p in products)
-        total_discount = sum(float(p['discount']) for p in products) + coupon_amount + loyalty_discount
-        total = subtotal - total_discount
 
+        if (amount_paid > 0):
+            amount_paid = amount_paid
+            is_draft = False
+            paid_status = 'paid'
+        else:
+            amount_paid = 0
+            is_draft = True
+            paid_status = 'draft'
+        
         invoice = Invoice.objects.create(
             invoice_number="INV-"+str(uuid.uuid4().int)[:8],
             customer=customer,
             subtotal=subtotal,
             coupon_discount=coupon_amount,
             loyalty_discount=loyalty_discount,
-            total=total,
-            amount_paid=0,
-            status="draft",
-            is_draft=True,
+            total=subtotal,
+            amount_paid= amount_paid,
+            status=paid_status,
+            is_draft=is_draft,
+            payment_type = payment_type,
+
         )
 
         for item in products:

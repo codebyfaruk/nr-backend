@@ -36,7 +36,7 @@
 <div class="container">
     <div class="mb-2 mt-2 card shadow-sm border-0 bg-light">
       <input type="hidden" id="customerId" value=""/>
-      <form id="customerForm" class="row align-items-center card-body g-1">
+      <form id="customerForm" class="row align-items-center card-body g-1" style="padding:10px">
         <!-- Phone -->
         <div class="col-3">
           <input
@@ -44,7 +44,7 @@
             id="customerPhone"
             name="customerPhone"
             placeholder="Customer Phone"
-            class="form-control form-control-sm"
+            class="form-control"
             required
           />
         </div>
@@ -56,7 +56,7 @@
             id="customerName"
             name="customerName"
             placeholder="Customer Name"
-            class="form-control form-control-sm"
+            class="form-control"
             required
           />
         </div>
@@ -68,7 +68,7 @@
             id="customerAddress"
             name="customerAddress"
             placeholder="Address"
-            class="form-control form-control-sm"
+            class="form-control"
             required
           />
         </div>
@@ -145,28 +145,42 @@
             </div>
           </div>
 
-          <!-- Footer Buttons: Toggle Left, Create Order Right -->
+            <!-- Footer Buttons: Toggle Left, Create Order Right -->
             <div class="card-footer bg-white">
+                <div id="paymentFields" class="px-3 py-2 border-bottom" style="display: block;">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <select class="form-select form-control" id="paymentType" name="payment_type">
+                              <option value="cash" >Payment Type Cash</option>
+                              <option value="card">Card</option>
+                              <option value="online">Online</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" id="amountPaid" placeholder="Paid Amount" class="form-control" value="" />
+                        </div>
+                        <div class="col-md-4 flex d-flex justify-content-center">
+                          <input type="checkbox" class="form-check-input mt-1" style="width: 1.4rem;height: 1.4rem;" id="showInBill" checked>
+                          <label for="id_is_active" style="margin-left: 10px;">Due show in bill?</label>
+                        </div>
+                    </div>
+                </div>
                 <div id="promoFields" class="px-3 py-2 border-bottom" style="display: none;">
                     <div class="row g-2">
                         <div class="col-md-7">
-                            <div class="form-group">
-                                <div class="input-group"> <!-- smaller size -->
-                                    <input type="text" class="form-control" id="couponValue" placeholder="Enter coupon Code" aria-label="Input field">
-                                    <button class="btn btn-secondary " type="button" id="applyPromoBtn">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </div>
+                            <div class="input-group"> <!-- smaller size -->
+                                <input type="text" class="form-control" id="couponValue" placeholder="Enter coupon Code" aria-label="Input field">
+                                <button class="btn btn-secondary " type="button" id="applyPromoBtn">
+                                    <i class="fas fa-check"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="col-md-5">
-                            <div class="form-group">
-                                <div class="input-group"> <!-- smaller size -->
-                                    <input type="number" class="form-control" id="roundOffValue" placeholder="Round off" aria-label="Input field">
-                                    <button class="btn btn-secondary " type="button" id="roundOffBtn">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </div>
+                            <div class="input-group"> <!-- smaller size -->
+                                <input type="number" class="form-control" id="roundOffValue" placeholder="Round off" aria-label="Input field">
+                                <button class="btn btn-secondary " type="button" id="roundOffBtn">
+                                    <i class="fas fa-check"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -413,21 +427,11 @@
         const address = $("#customerAddress").val().trim() || null;
 
         if (!phone || !/^\d{10}$/.test(phone)) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops!',
-            text: 'Please enter a valid phone number.',
-          });
-          return reject("Invalid phone number");
+          return reject("Invalid phone number!");
         }
 
         if (!name) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops!',
-            text: 'Please provide a valid name!',
-          });
-          return reject("Invalid name");
+          return reject("Invalid name!");
         }
 
         const customerData = { phone, name, address };
@@ -441,15 +445,10 @@
             contentType: "application/json",
             success: function (response) {
               $("#customerId").val(response.id);
-              resolve(response); // ✅ resolve with response
+              resolve(response);
             },
             error: function () {
-              Swal.fire({
-                icon: 'error',
-                title: 'Oops!',
-                text: 'Error updating customer. Please try again.',
-              });
-              reject("Error updating customer"); // ✅ reject on error
+              reject("Error updating customer!"); 
             }
           });
         } else {
@@ -460,15 +459,10 @@
             contentType: "application/json",
             success: function (response) {
               $("#customerId").val(response.id);
-              resolve(response); // ✅ resolve with response
+              resolve(response);
             },
             error: function () {
-              Swal.fire({
-                icon: 'error',
-                title: 'Oops!',
-                text: 'Error creating customer. Please try again.',
-              });
-              reject("Error creating customer"); // ✅ reject on error
+              reject("Error creating customer"); 
             }
           });
         }
@@ -505,63 +499,64 @@
     async function createOrder() {    
       // This assumes you handle customer creation separately
       await createCustomer();
-      let orderDetails = [];
+      return new Promise((resolve, reject) => {
+        let orderDetails = [];
 
-      // Get all the rows in the table body
-      let rows = document.querySelectorAll("#orderTable tbody tr");
+        // Get all the rows in the table body
+        let rows = document.querySelectorAll("#orderTable tbody tr");
 
-      // If no product rows exist, show a warning and exit
-      if (rows.length === 0) {customerId
-          Swal.fire({
-              icon: 'warning',
-              title: 'No Products Added',
-              text: 'Please add at least one product before creating an order.'
-          });
-          return;
-      }
+        // If no product rows exist, show a warning and exit
+        if (rows.length === 0) {
+            reject("Please add at least one product before creating an order.")
+        }
 
-      // Loop through each row and extract product details
-      rows.forEach((row) => {
-          let id = row.getAttribute('data-id');
-          let productName = row.cells[1].innerText;
-          let rate = parseFloat(row.cells[2].innerText);
-          let discount = parseInt(row.cells[3].innerText);
-          let qty = parseInt(row.cells[4].innerText);
-          let totalAmount = parseFloat(row.cells[5].innerText);
+        // Loop through each row and extract product details
+        rows.forEach((row) => {
+            let id = row.getAttribute('data-id');
+            let productName = row.cells[1].innerText;
+            let rate = parseFloat(row.cells[2].innerText);
+            let discount = parseInt(row.cells[3].innerText);
+            let qty = parseInt(row.cells[4].innerText);
+            let totalAmount = parseFloat(row.cells[5].innerText);
 
-          orderDetails.push({
-              id: id,
-              productName: productName,
-              rate: rate,
-              discount: discount,
-              qty: qty,
-              totalAmount: totalAmount
-          });
-      });
+            orderDetails.push({
+                id: id,
+                productName: productName,
+                rate: rate,
+                discount: discount,
+                qty: qty,
+                totalAmount: totalAmount
+            });
+        });
 
-      // Get the customer ID and coupon code
-      let customerId = $("#customerId").val();
-      let roundoff = $("#roundOffValue").val()?.trim() || null;
-      let couponCode = $("#couponValue").val()?.trim() || null;
-      let couponAmount = null;
-      try {
-          let text = $("#couponAmountValue").text()?.trim() || null;
-          couponAmount = text ? parseInt(text.replace(/^-\s?/, "")) : null;
-      } catch (error) {
-          couponAmount = null;
-      }
-      // Create order data object
-      let orderData = {
-          products: orderDetails,
-          coupon: {couponCode: couponCode, couponAmount: couponAmount},
-          roundoff: roundoff,
-          customerId: customerId,
-      };
-      return orderData;
+        // Get the customer ID and coupon code
+        let customerId = $("#customerId").val();
+        let roundoff = $("#roundOffValue").val()?.trim() || null;
+        let couponCode = $("#couponValue").val()?.trim() || null;
+        let couponAmount = null;
+        try {
+            let text = $("#couponAmountValue").text()?.trim() || null;
+            couponAmount = text ? parseInt(text.replace(/^-\s?/, "")) : null;
+        } catch (error) {
+            couponAmount = null;
+        }
+        // Create order data object
+        let orderData = {
+            products: orderDetails,
+            coupon: {couponCode: couponCode, couponAmount: couponAmount},
+            roundoff: roundoff,
+            customerId: customerId,
+        };
+        resolve(orderData);
+      })
     }
 
     // Function to clear all fields on the page using jQuery
     function clearAllFields() {
+
+      // Paid amount
+      $("#amountPaid").val("")
+
       // Clear Customer Form
       $("#customerForm")[0].reset();  // Reset all form fields in customerForm
       $("#customerId").val("");  // Clear customer ID
@@ -589,36 +584,45 @@
     }
 
     // Order create function
-    async function submitOrder(orderData, isDraft = false) {    
-      $.ajax({
-        url: "{% url 'api_invoice-list' %}",
-        method: "POST",
-        data: JSON.stringify(orderData),
-        contentType: "application/json",
-        success: function (response) {
-          if (response.invoice_number){
-            clearAllFields()
-            if (isDraft) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Draft Saved',
-                text: 'Your draft order has been saved successfully.',
-              });
-            } else {
-              // Redirect to a page (adjust URL as needed)
-              window.location.href = "{% url 'invoice' 0 %}".replace(0, response.id);
+    async function submitOrder(orderData, isDraft = false, paidAmount) {  
+      return new Promise((resolve, reject) => {
+        let paymentType = $("#paymentType").val() || 'cash'
+
+        if (!isDraft && (paidAmount <= 0)){
+          orderData.paidAmount = 0
+          orderData.paymentType = paymentType
+        }else{
+          orderData.paidAmount = paidAmount
+          orderData.paymentType = paymentType
+        }  
+        
+        $.ajax({
+          url: "{% url 'api_invoice-list' %}",
+          method: "POST",
+          data: JSON.stringify(orderData),
+          contentType: "application/json",
+          success: function (response) {
+            if (response.invoice_number){
+              clearAllFields()
+              if (isDraft) {
+                resolve("Your draft order has been saved successfully!")
+              } else {
+                // Redirect to a page (adjust URL as needed)
+                if ($("#showInBill").is(':checked')) {
+                  localStorage.setItem('showInBill', 'true');
+                } else {
+                  localStorage.removeItem('showInBill');
+                }
+                window.location.href = "{% url 'invoice' 0 %}".replace(0, response.id);
+              }
             }
+            
+          },
+          error: function (xhr, status, error) {
+            reject("Something went wrong on submitOrder!")
           }
-          
-        },
-        error: function (xhr, status, error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops!',
-            text: 'Something went wrong!',
-          });
-        }
-      });
+        });
+      })
     }
 
     function showDraftInvoiceModal(invoice) {
@@ -856,14 +860,19 @@
     // Create order button click
     $("#createOrderBtn").on("click", async function () {
       try {
+        let paidAmount = $("#amountPaid").val() || 0
         const orderData = await createOrder();
-        await submitOrder(orderData, false);
+        const response = await submitOrder(orderData, false, paidAmount);
+        Swal.fire({
+          icon: 'success',
+          text: response,
+        });
       } catch (error) {
         console.error("Error creating or submitting order:", error);
         Swal.fire({
           icon: 'error',
           title: 'Oops!',
-          text: 'Something went wrong while saving create order.',
+          text: error,
         });
       }
     });
@@ -872,7 +881,11 @@
     $("#createDraftBtn").on("click", async function () {
       try {
         const orderData = await createOrder();
-        await submitOrder(orderData, true);
+        const response = await submitOrder(orderData, true, 0);
+        Swal.fire({
+          icon: 'success',
+          text: response,
+        });
       } catch (error) {
         console.error("Error creating or submitting order:", error);
         Swal.fire({

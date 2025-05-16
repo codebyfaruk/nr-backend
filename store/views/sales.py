@@ -20,5 +20,5 @@ class InvoiceView(TemplateView):
 
         context = super().get_context_data(**kwargs)
         context["order"] = order
-        context["items"] = order.items.all()  # already prefetched
+        context["items"] = order.items.all()
         return context
