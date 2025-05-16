@@ -12,6 +12,13 @@ class LabelTemplateViewSet(viewsets.ModelViewSet):
     queryset = LabelTemplate.objects.all()
     serializer_class = LabelTemplateSerializer
 
+    def list(self, request, *args, **kwargs):
+        # Custom query logic
+        self.queryset = self.queryset.filter(is_billing=False)
+
+        # Then call the default list implementation
+        return super().list(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         # If 'is_default' is set to True, unset it for all others
         print(self.request.data.get('is_default'))

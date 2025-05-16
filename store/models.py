@@ -147,6 +147,11 @@ class Invoice(TimeStampedModel, models.Model):
         ("paid", "Paid"),
         ("cancelled", "Cancelled"),
     )
+    PAYMENT_TYPE_CHOICES = (
+        ('online', 'Online'),
+        ('cash', 'Cash'),
+        ('card', 'Card')
+    )
     invoice_number = models.CharField(max_length=255, unique=True)
     status = models.CharField(
         max_length=10, choices=INVOICE_STATUS_CHOICES, default="draft"
@@ -164,6 +169,10 @@ class Invoice(TimeStampedModel, models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     invoice_date = models.DateTimeField(default=timezone.now)
     is_draft = models.BooleanField(default=True)
+
+    payment_type = models.CharField(
+        max_length=10, choices=PAYMENT_TYPE_CHOICES, null=True, blank=True
+    )
 
     @property
     def discount(self):
@@ -183,6 +192,7 @@ class InvoiceItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     discount_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name="items")
 
     @property
     def price_at_purchase(self):
@@ -193,4 +203,4 @@ class InvoiceItem(models.Model):
         return self.quantity * self.price_at_purchase
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.short_name or self.product.name} (Invoice #{self.invoice.id})"
+        return f"{self.quantity} x {self.product.short_name or self.product_name} (Invoice #{self.invoice.invoice_number})"

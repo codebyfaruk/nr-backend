@@ -1,4 +1,125 @@
 {% extends "layout/base.html" %}
 {% block content %}
-Hello World
+<div class="container">
+<div class="row mt-3" id="profit-summary">
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-stats card-round">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-icon">
+            <div class="icon-big text-center icon-primary bubble-shadow-small">
+              <i class="fas fa-calendar-day"></i>
+            </div>
+          </div>
+          <div class="col col-stats ms-3 ms-sm-0">
+            <div class="numbers">
+              <p class="card-category">Today's Profit</p>
+              <h4 class="card-title" id="daily-profit">₹ 0</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-stats card-round">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-icon">
+            <div class="icon-big text-center icon-info bubble-shadow-small">
+              <i class="fas fa-calendar-week"></i>
+            </div>
+          </div>
+          <div class="col col-stats ms-3 ms-sm-0">
+            <div class="numbers">
+              <p class="card-category">This Week</p>
+              <h4 class="card-title" id="weekly-profit">₹ 0</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-stats card-round">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-icon">
+            <div class="icon-big text-center icon-success bubble-shadow-small">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+          </div>
+          <div class="col col-stats ms-3 ms-sm-0">
+            <div class="numbers">
+              <p class="card-category">This Month</p>
+              <h4 class="card-title" id="monthly-profit">₹ 0</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-stats card-round">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-icon">
+            <div class="icon-big text-center icon-secondary bubble-shadow-small">
+              <i class="fas fa-calendar"></i>
+            </div>
+          </div>
+          <div class="col col-stats ms-3 ms-sm-0">
+            <div class="numbers">
+              <p class="card-category">This Year</p>
+              <h4 class="card-title" id="yearly-profit">₹ 0</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+  function formatAmount(amount) {
+    return '₹ ' + parseFloat(amount).toFixed(2);
+  }
+
+  function fetchProfitSummary(period, targetId) {
+    $.ajax({
+      url: '/api/sales-profit/',
+      data: {
+        period: period,
+      },
+      success: function (data) {
+        if (data.length > 0) {
+          let total = 0;
+          data.forEach(row => {
+            total += parseFloat(row.total_profit);
+          });
+          $(`#${targetId}`).text(formatAmount(total));
+        }
+      },
+      error: function () {
+        $(`#${targetId}`).text('₹ 0');
+      }
+    });
+  }
+
+  // Fetch all profits
+  $(document).ready(function () {
+    fetchProfitSummary('day', 'daily-profit');
+    fetchProfitSummary('week', 'weekly-profit');
+    fetchProfitSummary('month', 'monthly-profit');
+    fetchProfitSummary('year', 'yearly-profit');
+  });
+</script>
+
+{% endblock extra_js %}

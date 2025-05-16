@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
 import uuid
 from accounts.models import Customer
-from store.filters import ProductFilter
+from store.filters import ProductFilter, SalesProfitFilter
 from store.models import Category, Discount, Invoice, Product, InvoiceItem
 from store.permissions import IsStaffPermission
 from store.serializers import (
@@ -129,6 +129,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         coupon = payload.get("coupon", {})
         coupon_amount = float(coupon.get("couponAmount") or 0)
         loyalty_discount = float(payload.get("roundoff") or 0)
+        amount_paid = float(payload.get("paidAmount") or 0)
+        payment_type = payload.get("paymentType")
 
         try:
             customer = Customer.objects.get(id=customer_id)
@@ -136,19 +138,28 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
 
         subtotal = sum(float((p['rate'])- float(p['discount'])) * p['qty'] for p in products)
-        total_discount = sum(float(p['discount']) for p in products) + coupon_amount + loyalty_discount
-        total = subtotal - total_discount
 
+        if (amount_paid > 0):
+            amount_paid = amount_paid
+            is_draft = False
+            paid_status = 'paid'
+        else:
+            amount_paid = 0
+            is_draft = True
+            paid_status = 'draft'
+        
         invoice = Invoice.objects.create(
             invoice_number="INV-"+str(uuid.uuid4().int)[:8],
             customer=customer,
             subtotal=subtotal,
             coupon_discount=coupon_amount,
             loyalty_discount=loyalty_discount,
-            total=total,
-            amount_paid=0,
-            status="draft",
-            is_draft=True,
+            total=subtotal,
+            amount_paid= amount_paid,
+            status=paid_status,
+            is_draft=is_draft,
+            payment_type = payment_type,
+
         )
 
         for item in products:
@@ -158,6 +169,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 quantity=item['qty'],
                 rate=item['rate'],
                 discount_at_purchase=item['discount'],
+                product= Product.objects.get(id=item['id']) if item['id'] else None
             )
 
         serializer = self.get_serializer(invoice)
@@ -183,3 +195,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             "customer": customer_data,
             "draft_invoice": invoice_data
         }, status=status.HTTP_200_OK)
+    
+class SalesProfitViewSet(viewsets.ViewSet):
+    def list(self, request):
+        # Apply filter based on the query params (start_date, end_date, period)
+        queryset = InvoiceItem.objects.all()
+        filtered_queryset = SalesProfitFilter(request.query_params, queryset=queryset).qs
+        
+        # Prepare the response data
+        data = []
+        for item in filtered_queryset:
+            data.append({
+                'period': item['period'],
+                'total_profit': item['total_profit'] or 0,
+                'total_investment': item['total_investment'] or 0,
+            })
+
+        return Response(data)

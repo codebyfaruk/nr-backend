@@ -1,89 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Invoice</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print {
-      body.custom-width {
-        width: var(--custom-width);
-        font-size: 12px;
-        margin: 0;
-        padding: 0;
-      }
+{% extends 'layout/base.html' %}
 
-      .no-print {
-        display: none;
-      }
+{% block extra_css %}
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
     }
-  </style>
-</head>
-<body class="bg-gray-100 p-4">
 
-  <div class="max-w-3xl mx-auto bg-white shadow-lg p-6 rounded">
-    <div class="flex justify-between items-center mb-4 no-print">
-      <h1 class="text-2xl font-bold">Invoice</h1>
-      <div class="flex items-center space-x-4">
-        <label for="paperWidth" class="font-medium">Select Width (mm):</label>
-        <select id="paperWidth" class="border px-2 py-1">
-          <!-- Options from 50 to 80 mm in 5mm steps -->
-          <script>
-            window.addEventListener('DOMContentLoaded', () => {
-              const select = document.getElementById("paperWidth");
-              for (let i = 50; i <= 80; i += 5) {
-                const option = document.createElement("option");
-                option.value = i;
-                option.textContent = `${i} mm`;
-                select.appendChild(option);
-              }
-            });
-          </script>
-        </select>
-        <button onclick="applyWidth()" class="bg-green-600 text-white px-4 py-2 rounded">
-          Apply
-        </button>
-      </div>
-    </div>
-    <div id="invoiceTableWrapper" class="mb-4">
-        <table id="invoiceTable" class="w-full table-auto border mb-4">
-        <thead class="bg-gray-200">
-            <tr>
-            <th class="border px-2 py-1">Item</th>
-            <th class="border px-2 py-1">Qty</th>
-            <th class="border px-2 py-1">Rate</th>
-            <th class="border px-2 py-1">Total</th>
-            </tr>
-        </thead>
-        <tbody id="invoiceBody"></tbody>
-        </table>
-    </div>
+    /* Only show the invoice-box and its contents */
+    .invoice-box, .invoice-box * {
+      visibility: visible;
+    }
 
-    <div class="text-right font-bold" id="totalAmount"></div>
+    .invoice-box {
+      position: absolute;
+      top: 0;
+      left: 0 !important; 
+      transform: translateX(-50%);
+      width: 80mm;
+      padding: 0;
+      margin: 0;
+      border: none;
+      box-shadow: none;
+    }
+    .center {
+      text-align: center;
+    }
+    .line {
+      border-top: 1px dashed #000;
+      margin: 5px 0;
+      height: 1px;
+      content: "";
+      display: block;
+      width: 100%;
+      clear: both;
+    }
 
-    <div class="mt-6 flex justify-end no-print">
-      <button onclick="printInvoice()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        Print Invoice
-      </button>
-    </div>
-  </div>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 2px 0;
+      text-align: left;
+    }
+    .summary-table td {
+      text-align: right;
+    }
+    .hidden {
+      display: none !important;
+    }
+    @page {
+      margin: 0 !important;
+    }
+  }
+</style>
+{% endblock %}
 
-  <script>
-    function loadInvoiceData() {
-        const tableHTML = sessionStorage.getItem("invoiceTable");
-        const wrapper = document.getElementById("invoiceTableWrapper");
+{% block content %}
+<div class="invoice-box">
+  <!-- Brand Name -->
+  <div class="center" style="font-weight: bold; font-size: 20px;">NR BAAZAR</div>
 
-        if (tableHTML) {
-          wrapper.innerHTML = tableHTML;
-        } else {
-          wrapper.innerHTML = "<p>No invoice data found.</p>";
-        }
-      }
+  <div class="line"></div>
 
-      // Call it on page load
-      document.addEventListener("DOMContentLoaded", loadInvoiceData);
+  <!-- Customer and Invoice Info Side by Side -->
+  <table style="width: 100%;">
+    <tr>
+      <td>
+        {{ order.customer.name }}<br>
+        {{ order.customer.phone }}<br>
+        {{ order.customer.address }}
+      </td>
+      <td style="text-align: right;">
+        <b>#{{ order.invoice_number }}</b><br>
+        {{ order.invoice_date|date:"Y-m-d H:i" }}
+      </td>
+    </tr>
+  </table>
 
-  </script>
+  <div class="line"></div>
 
-</body>
-</html>
+  <!-- Items -->
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Rate</th>
+        <th>Discount</th>
+        <th>Qty</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ item.product.short_name|default:item.product_name }}</td>
+        <td>{{ item.rate }}</td>
+        <td>{{ item.discount_at_purchase }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.price_at_purchase }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="line"></div>
+
+  <!-- Summary -->
+  <table class="summary-table">
+    <tr>
+      <td><strong>Subtotal</strong></td>
+      <td>₹{{ order.subtotal }}</td>
+    </tr>
+    {% if order.coupon_discount %}
+    <tr>
+      <td>Coupon Discount</td>
+      <td>− ₹{{ order.coupon_discount }}</td>
+    </tr>
+    {% endif %}
+    {% if order.loyalty_discount %}
+    <tr>
+      <td>Loyalty Discount</td>
+      <td>− ₹{{ order.loyalty_discount }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td><strong>Total</strong></td>
+      <td><strong>₹{{ order.total }}</strong></td>
+    </tr>
+    {% if order.amount_due > 0 %}
+    <tr class="dueAmount">
+      <td>Amount Paid</td>
+      <td>₹{{ order.amount_paid }}</td>
+    </tr>
+    <tr class="dueAmount">
+      <td>Amount Due</td>
+      <td>₹{{ order.amount_due }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  <div class="line"></div>
+
+  <div class="center">Thank you for your purchase!</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    if (localStorage.getItem('showInBill')) {
+      $('.dueAmount').removeClass('hidden');
+    } else {
+      $('.dueAmount').addClass('hidden');
+    }
+    window.print(); // Optional: trigger print automatically
+  });
+</script>
+{% endblock %}
