@@ -26,8 +26,10 @@
   }
 
   .line {
+    border: 0;
     border-top: 1px dashed #000;
     margin: 5px 0;
+    height: 1px;
   }
 
   table {
@@ -52,6 +54,10 @@
   @media print {
     body * {
       visibility: hidden;
+    }
+    .line {
+      visibility: visible !important;
+      display: block !important;
     }
 
     .invoice-box, .invoice-box * {
@@ -99,28 +105,37 @@
   </table>
 
   <div class="line"></div>
-
-  <!-- Items -->
+  
+  <!-- Items Section (Two-row style) -->
   <table>
     <thead>
       <tr>
         <th>#</th>
-        <th>Item</th>
         <th>Rate</th>
         <th>Discount</th>
         <th>Qty</th>
         <th>Total</th>
       </tr>
+      <tr>
+        <th colspan="5" style="text-align: left; padding-left: 20px;"> Item Description</th>
+      </tr>
+      <tr>
+        <th colspan="5"> <div class="line"></div></th>
+      </tr>
     </thead>
     <tbody>
       {% for item in order.items.all %}
       <tr>
-        <td>{{ forloop.counter }}</td>
-        <td>{{ item.product.short_name|default:item.product_name }}</td>
+        <td>{{ forloop.counter }}.</td>
         <td>{{ item.rate }}</td>
         <td>{{ item.discount_at_purchase }}</td>
         <td>{{ item.quantity }}</td>
         <td>{{ item.price_at_purchase }}</td>
+      </tr>
+      <tr>
+        <td colspan="5" style="padding-left: 20px;">
+          {{ item.product.name }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -130,10 +145,12 @@
 
   <!-- Summary -->
   <table class="summary-table">
+    {% if order.subtotal != order.total %}
     <tr>
       <td><strong>Subtotal</strong></td>
       <td>₹{{ order.subtotal }}</td>
     </tr>
+    {% endif %}
     {% if order.coupon_discount %}
     <tr>
       <td>Coupon Discount</td>
