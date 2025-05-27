@@ -860,7 +860,15 @@
     // Create order button click
     $("#createOrderBtn").on("click", async function () {
       try {
-        let paidAmount = $("#amountPaid").val() || 0
+        let paidAmount = $("#amountPaid").val() || ""
+        if (!paidAmount){
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops!',
+            text: "Please enter a paid amount!",
+          });
+          return;
+        }
         const orderData = await createOrder();
         const response = await submitOrder(orderData, false, paidAmount);
         Swal.fire({

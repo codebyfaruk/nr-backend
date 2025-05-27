@@ -1,0 +1,469 @@
+{% extends "layout/base.html" %}
+{% block extra_css %}
+<style>
+    th.action-column,
+    td.action-column {
+        width: 100px;
+        text-align: center;
+        white-space: nowrap;
+    }
+</style>
+{% endblock extra_css %}
+
+
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-inner">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="requirementTable" class="display table table-striped table-hover dataTable">
+                    <thead>
+                        <tr>
+                            <th class="action-column">ID</th>
+                            <th>Name</th>
+                            <th class="action-column">Price</th>
+                            <th class="action-column">Size</th>
+                            <th class="action-column">Quantity</th>
+                            <th class="action-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data populated via JavaScript -->
+                    </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Requirement Modal -->
+<div class="modal fade" id="addRequirementModal" tabindex="-1" role="dialog" aria-labelledby="addRequirementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="addRequirementModalLabel">Add Requirement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="addRequirementForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" class="form-control" name="name" required>
+            </div>
+            <div class="col-md-6">
+              <label for="purchase_price" class="form-label">Purchase Price</label>
+              <input type="number" step="0.01" class="form-control" name="purchase_price" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="size" class="form-label">Size</label>
+              <input type="text" class="form-control" name="size">
+            </div>
+            <div class="col-md-6">
+              <label for="quantity" class="form-label">Quantity</label>
+              <input type="number" class="form-control" name="quantity" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="brand" class="form-label">Brand</label>
+              <input type="text" class="form-control" name="brand">
+            </div>
+            <div class="col-md-6">
+              <label for="is_active" class="form-label d-block">Active</label>
+              <input type="checkbox" class="form-check-input" name="is_active" checked>
+            </div>
+
+            <div class="col-12">
+              <label for="comment" class="form-label">Comment</label>
+              <textarea class="form-control" name="comment" rows="2"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label for="image" class="form-label">Image</label>
+              <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(event, 'imagePreview')" capture="environment">
+              <img id="imagePreview" src="#" alt="Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;"/>
+            </div>
+
+            <div class="col-md-6">
+              <label for="bill_image" class="form-label">Bill Image</label>
+              <input type="file" class="form-control" name="bill_image" accept="image/*" onchange="previewImage(event, 'billImagePreview')" capture="environment">
+              <img id="billImagePreview" src="#" alt="Bill Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Requirement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Preview Requirement Modal -->
+<div class="modal fade" id="previewRequirementModal" tabindex="-1" role="dialog" aria-labelledby="previewRequirementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewRequirementModalLabel">Requirement Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6"><strong>Name:</strong> <span id="preview_name"></span></div>
+          <div class="col-md-6"><strong>Purchase Price:</strong> $<span id="preview_purchase_price"></span></div>
+
+          <div class="col-md-6"><strong>Size:</strong> <span id="preview_size"></span></div>
+          <div class="col-md-6"><strong>Quantity:</strong> <span id="preview_quantity"></span></div>
+
+          <div class="col-md-6"><strong>Brand:</strong> <span id="preview_brand"></span></div>
+          <div class="col-md-6"><strong>Active:</strong> <span id="preview_is_active"></span></div>
+
+          <div class="col-12"><strong>Comment:</strong><br><p id="preview_comment"></p></div>
+
+          <div class="col-md-6">
+            <strong>Image:</strong><br>
+            <img id="preview_image" src="#" alt="Image Preview" style="max-width: 100%; border-radius: 5px; display:none;">
+          </div>
+
+          <div class="col-md-6">
+            <strong>Bill Image:</strong><br>
+            <img id="preview_bill_image" src="#" alt="Bill Image Preview" style="max-width: 100%; border-radius: 5px; display:none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Edit Requirement Modal -->
+<div class="modal fade" id="editRequirementModal" tabindex="-1" role="dialog" aria-labelledby="editRequirementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="editRequirementModalLabel">Edit Requirement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="editRequirementForm" enctype="multipart/form-data">
+        <input type="hidden" name="id" id="editRequirementId" />
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label for="edit_name" class="form-label">Name</label>
+              <input type="text" class="form-control" name="name" id="edit_name" required>
+            </div>
+            <div class="col-md-6">
+              <label for="edit_purchase_price" class="form-label">Purchase Price</label>
+              <input type="number" step="0.01" class="form-control" name="purchase_price" id="edit_purchase_price" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="edit_size" class="form-label">Size</label>
+              <input type="text" class="form-control" name="size" id="edit_size">
+            </div>
+            <div class="col-md-6">
+              <label for="edit_quantity" class="form-label">Quantity</label>
+              <input type="number" class="form-control" name="quantity" id="edit_quantity" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="edit_brand" class="form-label">Brand</label>
+              <input type="text" class="form-control" name="brand" id="edit_brand">
+            </div>
+            <div class="col-md-6 d-flex align-items-center">
+              <div class="form-check mt-4">
+                <input type="checkbox" class="form-check-input" name="is_active" id="edit_is_active">
+                <label for="edit_is_active" class="form-check-label">Active</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label for="edit_comment" class="form-label">Comment</label>
+              <textarea class="form-control" name="comment" id="edit_comment" rows="2"></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label for="edit_image" class="form-label">Image</label>
+              <input type="file" class="form-control" name="image" id="edit_image" accept="image/*" onchange="previewImage(event, 'editImagePreview')" capture="environment">
+              <img id="editImagePreview" src="#" alt="Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;">
+              <small class="text-muted">Upload a new image to replace existing one.</small>
+            </div>
+
+            <div class="col-md-6">
+              <label for="edit_bill_image" class="form-label">Bill Image</label>
+              <input type="file" class="form-control" name="bill_image" id="edit_bill_image" accept="image/*" onchange="previewImage(event, 'editBillImagePreview')" capture="environment">
+              <img id="editBillImagePreview" src="#" alt="Bill Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;">
+              <small class="text-muted">Upload a new bill image to replace existing one.</small>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    function openPreviewModal(requirement){
+        // Fill the modal fields
+        $('#preview_name').text(requirement.name || '-');
+        $('#preview_purchase_price').text(requirement.purchase_price ?? '-');
+        $('#preview_size').text(requirement.size || '-');
+        $('#preview_quantity').text(requirement.quantity ?? '-');
+        $('#preview_brand').text(requirement.brand || '-');
+        $('#preview_is_active').text(requirement.is_active ? 'Yes' : 'No');
+        $('#preview_comment').text(requirement.comment || '-');
+
+        // Images
+        if (requirement.image) {
+            $('#preview_image').attr('src', requirement.image).show();
+        } else {
+            $('#preview_image').hide();
+        }
+        if (requirement.bill_image) {
+            $('#preview_bill_image').attr('src', requirement.bill_image).show();
+        } else {
+            $('#preview_bill_image').hide();
+        }
+
+        // Show modal
+        $('#previewRequirementModal').modal('show');
+    }
+
+    function openEditModal(requirement) {
+        // Set form values
+        $('#editRequirementId').val(requirement.id);
+        $('#edit_name').val(requirement.name || '');
+        $('#edit_purchase_price').val(requirement.purchase_price ?? '');
+        $('#edit_size').val(requirement.size || '');
+        $('#edit_quantity').val(requirement.quantity ?? '');
+        $('#edit_brand').val(requirement.brand || '');
+        $('#edit_is_active').prop('checked', requirement.is_active);
+        $('#edit_comment').val(requirement.comment || '');
+
+        // Set image previews or hide
+        if (requirement.image) {
+            $('#editImagePreview').attr('src', requirement.image).show();
+        } else {
+            $('#editImagePreview').hide();
+        }
+
+        if (requirement.bill_image) {
+            $('#editBillImagePreview').attr('src', requirement.bill_image).show();
+        } else {
+            $('#editBillImagePreview').hide();
+        }
+
+        // Reset file inputs (important if user reopens modal)
+        $('#edit_image').val('');
+        $('#edit_bill_image').val('');
+
+        // Show modal
+        $('#editRequirementModal').modal('show');
+    }
+
+    function previewImage(event, previewId) {
+        const input = event.target;
+        const preview = document.getElementById(previewId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+    }
+
+    function deleteRequirement(id) {
+        if (confirm("Are you sure you want to delete this requirement?")) {
+            $.ajax({
+                url: `/api/requirements/${id}/`,
+                type: 'DELETE',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function() {
+                    $('#requirementTable').DataTable().ajax.reload();
+                },
+                error: function(xhr) {
+                    alert("Delete failed: " + (xhr.responseJSON?.detail || 'Unknown error'));
+                }
+            });
+        }
+    }
+    function openCreateModal() {
+       $('#addRequirementModal').modal('show');
+    }
+
+    $(document).ready(function() {
+        const table = $('#requirementTable').DataTable({
+            ajax: {
+                url: "{% url 'api_requirement-list' %}",  // DRF ViewSet list route
+                dataSrc: '',
+                error: function(xhr) {
+                    const tbody = $('#requirementTable tbody');
+                    const colspan = $('#requirementTable thead th').length;
+                    tbody.empty();
+                    tbody.append(
+                        `<tr><td colspan="${colspan}" style="text-align:center; color:red;">${xhr.responseJSON?.detail || 'Error loading data'}</td></tr>`
+                    );
+                }
+            },
+            columns: [
+                { data: 'id', className:"action-column" },
+                { data: 'name'},
+                { data: 'purchase_price', className:"action-column" },
+                { data: 'size', className:"action-column" },
+                { data: 'quantity', className:"action-column" },
+                {
+                    data: null,
+                    className: "action-column",
+                    render: function(data, type, row) {
+                        return `
+                            <a href="javascript:void(0);" onclick='openPreviewModal(${JSON.stringify(row)})' class="text-primary me-2" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="javascript:void(0);" onclick='openEditModal(${JSON.stringify(row)})' class="text-warning me-2" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="#" onclick="deleteRequirement(${row.id})" class="text-danger" title="Delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        `;
+                    },
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            order: [[1, 'asc']],
+            pageLength: 10,
+            searching: true,
+            lengthChange: false,
+            dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>rtip',
+        });
+
+        // Append add button
+        $('#requirementTable_filter').parent().append(
+            `<button class="btn btn-primary btn-sm" onclick="openCreateModal()">Add Requirement</button>`
+        );
+    });
+
+    $('#addRequirementForm').on('submit', function(e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        $.ajax({
+            url: '/api/requirements/',  // Update if your endpoint differs
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+            $('#addRequirementModal').modal('hide');
+            $('#addRequirementForm')[0].reset();
+            $('#requirementTable').DataTable().ajax.reload();
+            },
+            error: function(xhr) {
+            alert("Error: " + (xhr.responseJSON?.detail || 'Something went wrong.'));
+            }
+        });
+    });
+
+    $('#editRequirementForm').submit(function(e) {
+        e.preventDefault();
+
+        const form = $(this)[0];
+        const formData = new FormData();
+
+        // Always send all text fields
+        formData.append('name', $('#edit_name').val());
+        formData.append('purchase_price', $('#edit_purchase_price').val());
+        formData.append('size', $('#edit_size').val());
+        formData.append('quantity', $('#edit_quantity').val());
+        formData.append('brand', $('#edit_brand').val());
+        formData.append('is_active', $('#edit_is_active').is(':checked'));
+        formData.append('comment', $('#edit_comment').val());
+
+        // Only append 'image' if a new file was selected
+        if ($('#edit_image')[0].files.length > 0) {
+            formData.append('image', $('#edit_image')[0].files[0]);
+        }
+
+        // Only append 'bill_image' if a new file was selected
+        if ($('#edit_bill_image')[0].files.length > 0) {
+            formData.append('bill_image', $('#edit_bill_image')[0].files[0]);
+        }
+
+        const requirementId = $('#editRequirementId').val();
+
+        $.ajax({
+            url: `/api/requirements/${requirementId}/`,
+            type: 'PUT',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+            $('#editRequirementModal').modal('hide');
+            $('#requirementTable').DataTable().ajax.reload(null, false);
+            swal.fire({
+                title: "Success!",
+                text: "Requirement updated successfully!",
+                icon: "success",
+                timer: 2000,
+                buttons: false
+            });
+            },
+            error: function(xhr, status, error) {
+            swal.fire({
+                title: "Error!",
+                text: "Error updating requirement: " + (xhr.responseJSON?.detail || error),
+                icon: "error",
+                button: "OK",
+            });
+            }
+        });
+    });
+   
+</script>
+{% endblock extra_js %}

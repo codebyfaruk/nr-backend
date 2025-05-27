@@ -32,6 +32,7 @@ from labels.urls import router as labels_router
 from accounts.urls import router as accounts_router
 from accounts.views import CustomLoginView, CustomLogoutView
 from store.urls import router as store_router
+from requirements.urls import router as req_router
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -47,6 +48,7 @@ router = DefaultRouter()
 router.registry.extend(accounts_router.registry)
 router.registry.extend(store_router.registry)
 router.registry.extend(labels_router.registry)
+router.registry.extend(req_router.registry)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -76,4 +78,5 @@ urlpatterns = [
     path("logout/", CustomLogoutView.as_view(), name="logout"),
     path("customer/", include("accounts.urls")),
     path("label/", include("labels.urls")),
+    path("requirements/", include("requirements.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

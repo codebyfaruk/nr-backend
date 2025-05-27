@@ -67,7 +67,7 @@ class Product(TimeStampedModel, models.Model):
     stock_quantity = models.PositiveIntegerField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     brand = models.CharField(max_length=100, null=True, blank=True)
-    image = models.ImageField(upload_to="products/", null=True, blank=True)
+    image = models.ImageField(upload_to="media/products/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_printed = models.BooleanField(default=False)
     barcode = models.CharField(max_length=255, unique=True)
