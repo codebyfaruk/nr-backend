@@ -1,13 +1,59 @@
 {% extends 'layout/base.html' %}
-
+{% load static %}
 {% block extra_css %}
 <style>
+  @font-face {
+    font-family: 'FONTOK23';
+    src: url("{% static 'fonts/DejaVuSansMono-Bold.ttf' %}") format('truetype');
+    font-weight: normal;
+  }
+  body, .invoice-box * {
+      font-family: 'FONTOK23', monospace !important;
+  }
+
+  .invoice-box {
+    font-size: 10pt;
+    line-height: 1.2;
+    width: 80mm;
+    padding: 5px;
+    margin: auto;
+  }
+
+  .invoice-box .center {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12pt;
+  }
+
+  .line {
+    border-top: 1px dashed #000;
+    margin: 5px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+
+  th, td {
+    padding: 2px 0;
+    text-align: left;
+  }
+
+  .summary-table td {
+    text-align: right;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
   @media print {
     body * {
       visibility: hidden;
     }
 
-    /* Only show the invoice-box and its contents */
     .invoice-box, .invoice-box * {
       visibility: visible;
     }
@@ -15,43 +61,16 @@
     .invoice-box {
       position: absolute;
       top: 0;
-      left: 0 !important; 
-      transform: translateX(-50%);
-      width: 80mm;
-      padding: 0;
-      margin: 0;
-      border: none;
+      left: 0;
+      transform: none;
       box-shadow: none;
-    }
-    .center {
-      text-align: center;
-    }
-    .line {
-      border-top: 1px dashed #000;
-      margin: 5px 0;
-      height: 1px;
-      content: "";
-      display: block;
-      width: 100%;
-      clear: both;
+      border: none;
+      margin: 0;
+      padding: 0;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 2px 0;
-      text-align: left;
-    }
-    .summary-table td {
-      text-align: right;
-    }
-    .hidden {
-      display: none !important;
-    }
     @page {
-      margin: 0 !important;
+      margin: 0;
     }
   }
 </style>
