@@ -5,6 +5,9 @@ from store.models import Invoice
 class SalesView(TemplateView):
     template_name = "store/sales/sales.html"
 
+class InvoiceListView(TemplateView):
+    template_name = "store/sales/invoice_list.html"
+
 
 class InvoiceView(TemplateView):
     template_name = "store/sales/invoice.html"

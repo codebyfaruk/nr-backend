@@ -17,6 +17,7 @@ from store.serializers import (
     ProductSerializer,
     SalesProductSerializer,
 )
+from decimal import Decimal
 from accounts.serializers import CustomerSerializer
 
 
@@ -154,7 +155,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             subtotal=subtotal,
             coupon_discount=coupon_amount,
             loyalty_discount=loyalty_discount,
-            total=subtotal,
+            total=subtotal - (coupon_amount+loyalty_discount),
             amount_paid= amount_paid,
             status=paid_status,
             is_draft=is_draft,
@@ -163,17 +164,57 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         )
 
         for item in products:
+            try:
+                product = Product.objects.get(id=item['id'])
+                product.stock_quantity = product.stock_quantity - int(item['qty'])
+                product.save()
+            except Exception as e:
+                print(e)
+                product = None
+            
             InvoiceItem.objects.create(
                 invoice=invoice,
                 product_name=item['productName'],
                 quantity=item['qty'],
                 rate=item['rate'],
                 discount_at_purchase=item['discount'],
-                product= Product.objects.get(id=item['id']) if item['id'] else None
+                product=product 
             )
 
         serializer = self.get_serializer(invoice)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+
+        # Extract and update customer
+        customer_id = data.get("customerId")
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update customer fields
+        customer.name = data.get("customerName", customer.name)
+        customer.phone = data.get("customerPhone", customer.phone)
+        customer.address = data.get("customerAddress", customer.address)
+        customer.save()
+
+        # Update invoice fields
+        amount_paid = Decimal(data.get("paidAmount") or 0)
+        payment_type = data.get("paymentType") or None
+        payment_status = data.get("invoiceStatus") or None
+        
+        instance.customer = customer
+        instance.amount_paid = amount_paid
+        instance.payment_type = payment_type
+        instance.status = payment_status
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
     
     @action(detail=False, methods=['get'], url_name='customer-details')
     def get_customer_with_draft(self, request):

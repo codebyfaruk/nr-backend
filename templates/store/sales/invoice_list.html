@@ -1,0 +1,386 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="page-inner">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+
+          <div class="card-header">
+            <h4 class="card-title">Invoices</h4>
+          </div>
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="invoiceTable" class="display table table-striped table-hover dataTable">
+                <thead>
+                  <tr>
+                    <th class="action-column">ID</th>
+                    <th>Invoice No</th>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="action-column">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Populated via AJAX -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<!-- Detailed Edit Invoice Modal -->
+<div class="modal fade" id="editInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="editInvoiceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <form id="editInvoiceForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Invoice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body row g-3">
+
+          <input type="hidden" id="invoiceId">
+          <input type="hidden" id="customerId">
+
+          <div class="col-md-6">
+            <label for="customerName">Customer Name</label>
+            <input type="text" class="form-control" id="customerName">
+          </div>
+
+          <div class="col-md-6">
+            <label for="customerPhone">Customer Phone</label>
+            <input type="text" class="form-control" id="customerPhone">
+          </div>
+
+          <div class="col-md-12">
+            <label for="customerAddress">Customer Address</label>
+            <textarea class="form-control" id="customerAddress" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-4">
+            <label for="amountPaid">Amount Paid</label>
+            <input type="number" class="form-control" id="amountPaid">
+          </div>
+
+          <div class="col-md-4">
+            <label for="invoiceStatus">Status</label>
+            <select class="form-control" id="invoiceStatus">
+              <option value="draft">Draft</option>
+              <option value="paid">Paid</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="paymentType">Payment Type</label>
+            <select class="form-control" id="paymentType">
+              <option value="">-- Select --</option>
+              <option value="cash">Cash</option>
+              <option value="online">Online</option>
+              <option value="card">Card</option>
+            </select>
+          </div>
+
+          <div class="col-md-6 mt-3">
+            <label for="invoiceTotal">Total Amount (Read-only)</label>
+            <input type="number" class="form-control" id="invoiceTotal" readonly>
+          </div>
+          <div class="col-md-6 mt-3">
+            <label for="invoiceTotal">Discount</label>
+            <input type="number" class="form-control" id="invoiceDiscount" readonly>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Update Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- View Invoice Details Modal -->
+<div class="modal fade" id="viewInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="viewInvoiceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewInvoiceModalLabel">Invoice Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <h4>Invoice #<span id="viewInvoiceNumber"></span></h4>
+          <small>Status: <span id="viewInvoiceStatus" class="badge"></span></small>
+          <span class="float-end">Date: <span id="viewInvoiceDate"></span></span>
+        </div>
+
+        <hr>
+
+        <h5>Customer Details</h5>
+        <p><strong>Name:</strong> <span id="viewCustomerName"></span></p>
+        <p><strong>Phone:</strong> <span id="viewcustomerPhone"></span></p>
+        <p><strong>Address:</strong> <span id="viewCustomerAddress"></span></p>
+
+        <hr>
+
+        <h5>Payment Info</h5>
+        <p><strong>Payment Type:</strong> <span id="viewPaymentType"></span></p>
+        <p><strong>Amount Paid:</strong> $<span id="viewAmountPaid"></span></p>
+        <p><strong>Amount Due:</strong> $<span id="viewAmountDue"></span></p>
+
+        <hr>
+
+        <h5>Items</h5>
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Discount</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="viewItemsBody">
+            <!-- Filled dynamically -->
+          </tbody>
+        </table>
+
+        <div class="row justify-content-end">
+          <div class="col-md-4">
+            <table class="table table-borderless">
+              <tr>
+                <th>Subtotal:</th>
+                <td>$<span id="viewSubtotal"></span></td>
+              </tr>
+              <tr>
+                <th>Coupon Discount:</th>
+                <td>-$<span id="viewCouponDiscount"></span></td>
+              </tr>
+              <tr>
+                <th>Loyalty Discount:</th>
+                <td>-$<span id="viewLoyaltyDiscount"></span></td>
+              </tr>
+              <tr class="fw-bold">
+                <th>Total:</th>
+                <td>$<span id="viewTotal"></span></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPreviewModal(invoice) {
+  // Set basic info
+  $('#viewInvoiceNumber').text(invoice.invoice_number);
+  $('#viewInvoiceDate').text(new Date(invoice.invoice_date).toLocaleString());
+
+  // Status badge logic
+  let statusBadge = $('#viewInvoiceStatus');
+  statusBadge.text(invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1));
+  statusBadge.removeClass('bg-success bg-warning bg-danger bg-secondary');
+
+  if (invoice.status === 'paid') statusBadge.addClass('bg-success');
+  else if (invoice.status === 'draft') statusBadge.addClass('bg-warning');
+  else if (invoice.status === 'cancelled') statusBadge.addClass('bg-danger');
+  else statusBadge.addClass('bg-secondary');
+
+  // Customer details
+  $('#viewCustomerName').text(invoice.customer.name);
+  $('#viewcustomerPhone').text(invoice.customer.phone);
+  $('#viewCustomerAddress').text(invoice.customer.address);
+
+  // Payment info
+  $('#viewPaymentType').text(invoice.payment_type || 'N/A');
+  $('#viewAmountPaid').text(parseFloat(invoice.amount_paid).toFixed(2));
+  const amountDue = (parseFloat(invoice.amount_due)).toFixed(2);
+  $('#viewAmountDue').text(amountDue);
+
+  // Items table body
+  const tbody = $('#viewItemsBody');
+  tbody.empty();
+  if (invoice.items && invoice.items.length > 0) {
+    invoice.items.forEach(item => {
+      tbody.append(`
+        <tr>
+          <td>${item.product_name}</td>
+          <td>${item.quantity}</td>
+          <td>$${parseFloat(item.rate).toFixed(2)}</td>
+          <td>$${parseFloat(item.discount_at_purchase).toFixed(2)}</td>
+          <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+        </tr>
+      `);
+    });
+  } else {
+    tbody.append(`<tr><td colspan="5" class="text-center">No items found</td></tr>`);
+  }
+
+  // Summary
+  $('#viewSubtotal').text(parseFloat(invoice.subtotal).toFixed(2));
+  $('#viewCouponDiscount').text(parseFloat(invoice.coupon_discount).toFixed(2));
+  $('#viewLoyaltyDiscount').text(parseFloat(invoice.loyalty_discount).toFixed(2));
+  $('#viewTotal').text(parseFloat(invoice.total).toFixed(2));
+
+  // Show modal
+  $('#viewInvoiceModal').modal('show');
+}
+
+function openEditModal(invoice) {
+    $('#invoiceId').val(invoice.id);
+    $('#customerId').val(invoice.customer.id);
+    $('#customerName').val(invoice.customer.name);
+    $('#customerPhone').val(invoice.customer.phone);
+    $('#customerAddress').val(invoice.customer.address);
+
+    $('#amountPaid').val(invoice.amount_paid);
+    $('#invoiceStatus').val(invoice.status);
+    $('#paymentType').val(invoice.payment_type);
+    $('#invoiceTotal').val(invoice.total);
+    $('#invoiceDiscount').val(invoice.discount);
+    $('#editInvoiceModal').modal('show');
+}
+
+
+
+$(document).ready(function() {
+  $.ajaxSetup({
+    headers: {
+        'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+    }
+  });
+
+  $('#invoiceTable').DataTable({
+      ajax: {
+          url: "{% url 'api_invoice-list' %}", // Update with your actual DRF ViewSet list route
+          dataSrc: '',
+          error: function(xhr) {
+              const tbody = $('#invoiceTable tbody');
+              const colspan = $('#invoiceTable thead th').length;
+              tbody.empty();
+              tbody.append(
+                  `<tr><td colspan="${colspan}" style="text-align:center; color:red;">${xhr.responseJSON?.detail || 'Error loading data'}</td></tr>`
+              );
+          }
+      },
+      columns: [
+          { data: 'id', className: "action-column" },
+          { data: 'invoice_number' },
+          { data: 'customer.name' },
+          { 
+              data: 'total',
+              render: data => `₹${parseFloat(data).toFixed(2)}`
+          },
+          {
+            data: null,
+            render: function(row) {
+                const amountPaid = parseFloat(row.amount_paid || 0);
+                const total = parseFloat(row.total || 0);
+                const paymentType = row.payment_type || 'N/A';
+
+                if (amountPaid < total) {
+                    return `<span class="badge bg-danger">Due</span>`;
+                } else {
+                    return `<span class="badge bg-primary text-uppercase">${paymentType}</span>`;
+                }
+            }
+          },
+          {
+              data: 'invoice_date',
+              render: data => new Date(data).toLocaleDateString()
+          },
+          {
+              data: null,
+              className: "action-column",
+              render: function(row) {
+                  return `
+                      <a href="javascript:void(0);" onclick='openPreviewModal(${JSON.stringify(row)})' class="text-primary me-2" title="View">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a href="javascript:void(0);" onclick='openEditModal(${JSON.stringify(row)})' class="text-warning me-2" title="Edit">
+                          <i class="fas fa-edit"></i>
+                      </a>
+                  `;
+              },
+              orderable: false,
+              searchable: false
+          }
+      ],
+      order: [[0, 'desc']],
+      pageLength: 10,
+      searching: true,
+      lengthChange: false,
+      dom: '<"d-flex justify-content-between align-items-center mb-2"lfB>rtip',
+  });
+  $('#editInvoiceForm').on('submit', function (e) {
+    e.preventDefault();
+
+    const invoiceId = $('#invoiceId').val();
+    const customerId = $('#customerId').val();
+
+    const invoicePayload = {
+        customerId: customerId,  // as required by the backend
+        paidAmount: parseFloat($('#amountPaid').val()) || 0,
+        paymentType: $('#paymentType').val(),
+        invoiceStatus: $('#invoiceStatus').val()
+    };
+
+    // Now send a single update request to the invoice endpoint
+    $.ajax({
+        url: `/api/invoices/${invoiceId}/`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(invoicePayload),
+        success: function () {
+            $('#editInvoiceModal').modal('hide');
+            $('#invoiceTable').DataTable().ajax.reload(null, false);
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Invoice updated successfully.',
+                confirmButtonText: 'OK',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+
+        },
+        error: function (xhr) {
+            alert("Failed to update invoice: " + (xhr.responseJSON?.detail || "Unknown error"));
+        }
+    });
+  });
+
+
+
+});
+</script>
+{% endblock %}

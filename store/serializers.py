@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from accounts.models import CustomUser
 from store.models import Category, Discount, Invoice, InvoiceItem, Product
-
+from accounts.serializers import CustomerSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -117,9 +117,9 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 # Invoice Serializer
 class InvoiceSerializer(serializers.ModelSerializer):
     customer = (
-        serializers.StringRelatedField()
-    )  # You can replace with a nested serializer if needed
-    items = InvoiceItemSerializer(many=True, read_only=True)  # Nested items
+        CustomerSerializer()
+    )
+    items = InvoiceItemSerializer(many=True)  # Nested items
     discount = serializers.ReadOnlyField()  # Computed discount field
     amount_due = serializers.ReadOnlyField()  # Computed amount_due field
 
@@ -140,6 +140,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "discount",
             "amount_due",
             "items",
+            "payment_type",
         ]
 
     # You may want to override the create and update methods if you need specific logic.

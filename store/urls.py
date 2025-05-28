@@ -22,7 +22,7 @@ from store.views.product import (
     ProductListView,
     ProductUpdateView,
 )
-from store.views.sales import InvoiceView, SalesView
+from store.views.sales import InvoiceListView, InvoiceView, SalesView
 
 router = DefaultRouter()
 router.register(r"products", ProductViewSet, basename="api_product")
@@ -40,6 +40,7 @@ urlpatterns = [
     path("products/<int:pk>/", ProductDetailView.as_view(), name="product_detail"),
     path("sales/", SalesView.as_view(), name="sales"),
     path("invoice/<int:pk>/", InvoiceView.as_view(), name="invoice"),
+    path("invoice-list/", InvoiceListView.as_view(), name="invoice-list"),
     path("coupons/", DiscountListView.as_view(), name="discount-list"),
     path("coupons/add/", DiscountCreateView.as_view(), name="discount-add"),
     path("coupons/<int:pk>/edit/", DiscountUpdateView.as_view(), name="discount-edit"),
