@@ -99,7 +99,7 @@
       </td>
       <td style="text-align: right;">
         <b>#{{ order.invoice_number }}</b><br>
-        {{ order.invoice_date|date:"Y-m-d H:i" }}
+        <span id="invoiceDate">{{ order.invoice_date|date:"Y-m-d H:i" }}</span>
       </td>
     </tr>
   </table>
@@ -193,7 +193,14 @@
     } else {
       $('.dueAmount').addClass('hidden');
     }
-    window.print(); // Optional: trigger print automatically
+    const updated = localStorage.getItem('invoiceIsUpdated');
+    if (updated === 'true') {
+      const updatedDate = "{{ order.updated_at|date:'Y-m-d H:i' }}";
+      $("#invoiceDate").html(updatedDate);
+      console.log(updatedDate)
+      localStorage.removeItem('invoiceIsUpdated');
+    }
+    window.print();
   });
 </script>
 {% endblock %}

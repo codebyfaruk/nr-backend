@@ -359,18 +359,25 @@ $(document).ready(function() {
         method: 'PUT',
         contentType: 'application/json',
         data: JSON.stringify(invoicePayload),
-        success: function () {
+        success: function (response) {
             $('#editInvoiceModal').modal('hide');
-            $('#invoiceTable').DataTable().ajax.reload(null, false);
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: 'Invoice updated successfully.',
-                confirmButtonText: 'OK',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false
+                text: 'Invoice updated successfully. Do you want to view the invoice now?',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                allowOutsideClick: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // User clicked Yes
+                    localStorage.setItem('invoiceIsUpdated', 'true');
+                    window.location.href = "{% url 'invoice' 0 %}".replace("0",response.id);
+                }
+                // else: User clicked No or dismissed the alert — do nothing
             });
+
 
         },
         error: function (xhr) {

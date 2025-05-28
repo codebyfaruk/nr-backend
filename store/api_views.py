@@ -186,6 +186,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        partial = kwargs.pop('partial', True)
         data = request.data
 
         # Extract and update customer
@@ -205,14 +206,21 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         amount_paid = Decimal(data.get("paidAmount") or 0)
         payment_type = data.get("paymentType") or None
         payment_status = data.get("invoiceStatus") or None
-        
-        instance.customer = customer
-        instance.amount_paid = amount_paid
-        instance.payment_type = payment_type
-        instance.status = payment_status
-        instance.save()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Pass customer ID (not object) and other fields as primitives
+        update_data = {
+            "amount_paid": amount_paid,
+            "payment_type": payment_type,
+            "status": payment_status
+        }
+
+        serializer = self.get_serializer(instance, data=update_data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Return the full serialized data of the updated invoice
+        full_serializer = self.get_serializer(instance)
+        return Response(full_serializer.data)
 
 
     

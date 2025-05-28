@@ -116,9 +116,7 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 
 # Invoice Serializer
 class InvoiceSerializer(serializers.ModelSerializer):
-    customer = (
-        CustomerSerializer()
-    )
+    customer = CustomerSerializer()
     items = InvoiceItemSerializer(many=True)  # Nested items
     discount = serializers.ReadOnlyField()  # Computed discount field
     amount_due = serializers.ReadOnlyField()  # Computed amount_due field
