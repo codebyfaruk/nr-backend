@@ -12,7 +12,7 @@
   }
 
   .invoice-box {
-    font-size: 10pt;
+    font-size: 14px;
     line-height: 1.2;
     width: 80mm;
     padding: 5px;
@@ -22,20 +22,22 @@
   .invoice-box .center {
     text-align: center;
     font-weight: bold;
-    font-size: 12pt;
+    font-size: 14px;
   }
 
   .line {
     border: 0;
     border-top: 1px dashed #000;
-    margin: 5px 0;
+    margin: 1px 0;
     height: 1px;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10pt;
+    font-size: 14px;
+    text-transform: uppercase;
+
   }
 
   th, td {
@@ -55,13 +57,9 @@
     body * {
       visibility: hidden;
     }
-    .line {
-      visibility: visible !important;
-      display: block !important;
-    }
 
     .invoice-box, .invoice-box * {
-      visibility: visible;
+      visibility: visible !important;
     }
 
     .invoice-box {
@@ -180,7 +178,6 @@
   </table>
 
   <div class="line"></div>
-
   <div class="center">Thank you for your purchase!</div>
 </div>
 {% endblock %}
@@ -197,9 +194,16 @@
     if (updated === 'true') {
       const updatedDate = "{{ order.updated_at|date:'Y-m-d H:i' }}";
       $("#invoiceDate").html(updatedDate);
-      console.log(updatedDate)
       localStorage.removeItem('invoiceIsUpdated');
     }
+
+    window.onafterprint = function () {
+      url = "{% url 'sales' %}"
+      setTimeout(function () {
+        // window.location.href = url;
+      }, 100);
+
+    };
     window.print();
   });
 </script>
