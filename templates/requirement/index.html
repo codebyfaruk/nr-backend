@@ -7,6 +7,9 @@
         text-align: center;
         white-space: nowrap;
     }
+    .select2-container {
+    z-index: 9999 !important;
+  }
 </style>
 {% endblock extra_css %}
 
@@ -76,30 +79,35 @@
               <input type="number" class="form-control" name="quantity" required>
             </div>
 
-            <div class="col-md-6">
-              <label for="brand" class="form-label">Brand</label>
-              <input type="text" class="form-control" name="brand">
-            </div>
-            <div class="col-md-6">
-              <label for="is_active" class="form-label d-block">Active</label>
-              <input type="checkbox" class="form-check-input" name="is_active" checked>
+            <div class="form-group col-md-6">
+              <label for="brand">Brand</label>
+              <div class="input-group">
+                <select id="brand" name="brand" class="form-control select2">
+                  <option></option>
+                  {% for brand in brands %}
+                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#createBrandModal">+</button>
+              </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-md-6">
+              <div class="form-check mt-4">  <!-- mt-4 to align with other fields -->
+                <input type="checkbox" class="form-check-input" style="width:25px; height:25px; " id="is_active" name="is_active" checked>
+                <label class="form-check-label" for="is_active">Is Active</label>
+              </div>
+            </div>
+
+            <div class="col-6">
               <label for="comment" class="form-label">Comment</label>
-              <textarea class="form-control" name="comment" rows="2"></textarea>
+              <textarea class="form-control" name="comment" rows="4"></textarea>
             </div>
 
             <div class="col-md-6">
               <label for="image" class="form-label">Image</label>
               <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(event, 'imagePreview')" capture="environment">
               <img id="imagePreview" src="#" alt="Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;"/>
-            </div>
-
-            <div class="col-md-6">
-              <label for="bill_image" class="form-label">Bill Image</label>
-              <input type="file" class="form-control" name="bill_image" accept="image/*" onchange="previewImage(event, 'billImagePreview')" capture="environment">
-              <img id="billImagePreview" src="#" alt="Bill Image Preview" style="display:none; max-width: 100%; margin-top: 8px; border-radius: 5px;"/>
             </div>
           </div>
         </div>
@@ -231,11 +239,51 @@
   </div>
 </div>
 
+<!-- Brand Model-->
+ <div class="modal fade" id="createBrandModal" tabindex="-1" aria-labelledby="createBrandModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="createBrandForm" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createBrandModalLabel">Create Brand</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="brandName" class="form-label">Brand Name</label>
+            <input type="text" class="form-control" name="name" id="brandName" required>
+          </div>
+          <div class="mb-3">
+            <label for="brandAddress" class="form-label">Address</label>
+            <textarea class="form-control" name="address" id="brandAddress"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="billImage" class="form-label">Bill Image</label>
+            <input type="file" class="form-control" name="bill_image" id="billImage">
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="true" name="is_default" id="isDefault" checked>
+            <label class="form-check-label" for="isDefault">
+              Set as Default Brand
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- End Brand modal -->
+
 </div>
 
 {% endblock content %}
 
 {% block extra_js %}
+
 <script>
     function openPreviewModal(requirement){
         // Fill the modal fields
@@ -332,6 +380,15 @@
     }
 
     $(document).ready(function() {
+
+      $('.select2').select2({
+        theme: 'bootstrap-5', 
+        placeholder: "Select an option",
+        allowClear: true,
+        dropdownParent: $('#addRequirementModal')
+
+      });
+
         const table = $('#requirementTable').DataTable({
             ajax: {
                 url: "{% url 'api_requirement-list' %}",  // DRF ViewSet list route
@@ -464,6 +521,45 @@
             }
         });
     });
+
+  $('#createBrandForm').submit(function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+    $.ajax({
+      type: 'POST',
+      url: "{% url 'api_brand-list' %}",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        let newOption = new Option(response.name, response.id, false, true);
+        $('#brand').append(newOption).trigger('change');
+        // Close the modal
+        $('#createBrandModal').modal('hide');
+        $('#createBrandForm')[0].reset();
+        Swal.fire({
+            title: "Success!",
+            text: "Brand created successfully!",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => {
+            // First, hide the current modal
+            $('#addRequirementModal').modal('show');
+        });
+        
+      },
+      error: function(xhr) {
+        swal.fire({
+            title: "Error!",
+            text: "Brand creation failed! " + (xhr.responseJSON?.detail || error),
+            icon: "error",
+            button: "OK",
+        });
+      }
+    });
+  });
    
 </script>
 {% endblock extra_js %}

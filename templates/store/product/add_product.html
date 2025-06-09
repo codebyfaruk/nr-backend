@@ -226,6 +226,12 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5', 
+            placeholder: "Select an option",
+            allowClear: true
+        });
+
         var productEditUrl = '{% url "product_edit" 0 %}';
         console.log(productEditUrl)
         $('#id_name').on('keyup', function() {

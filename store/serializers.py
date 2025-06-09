@@ -4,7 +4,7 @@ import string
 from rest_framework import serializers
 
 from accounts.models import CustomUser
-from store.models import Category, Discount, Invoice, InvoiceItem, Product
+from store.models import Category, Discount, Invoice, InvoiceItem, Product, Brand
 from accounts.serializers import CustomerSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -191,3 +191,9 @@ class ApplyCouponSerializer(serializers.Serializer):
     code = serializers.CharField()
     total = serializers.DecimalField(max_digits=10, decimal_places=2)
     cutomer_id = serializers.IntegerField(required=False, allow_null=True)
+
+class BrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brand
+        fields = ['id', 'name', 'address', 'bill_image', 'is_default']
+

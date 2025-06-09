@@ -14,7 +14,7 @@ class LabelTemplateViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         # Custom query logic
-        self.queryset = self.queryset.filter(is_billing=False)
+        self.queryset = self.queryset.filter()
 
         # Then call the default list implementation
         return super().list(request, *args, **kwargs)

@@ -1,6 +1,6 @@
 from django import forms
 
-from store.models import Category, Discount, Product
+from store.models import Category, Discount, Product, Brand
 
 
 class ProductAddForm(forms.ModelForm):
@@ -14,6 +14,13 @@ class ProductAddForm(forms.ModelForm):
         required=False,
         choices=Product.DISCOUNT_TYPE_CHOICES,
         widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    brand = forms.ModelChoiceField(
+        required=False,
+        queryset=Brand.objects.all(),
+        empty_label="Select Brand",
+        widget=forms.Select(attrs={"class": "form-select select2"}),
     )
 
     class Meta:
@@ -91,6 +98,13 @@ class ProductEditForm(forms.ModelForm):
         required=False,
         choices=Product.DISCOUNT_TYPE_CHOICES,
         widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    brand = forms.ModelChoiceField(
+        required=False,
+        queryset=Brand.objects.all(),
+        empty_label="Select Brand",
+        widget=forms.Select(attrs={"class": "form-select select2"}),
     )
 
     class Meta:

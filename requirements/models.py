@@ -1,4 +1,5 @@
 from django.db import models
+from store.models import Brand
 
 # Create your models here.
 class Requirement(models.Model):
@@ -9,9 +10,8 @@ class Requirement(models.Model):
     )  
     size = models.CharField(max_length=55, blank=True, null=True)
     quantity = models.PositiveIntegerField()
-    brand = models.CharField(max_length=100, null=True, blank=True)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
     image = models.ImageField(upload_to="media/requiremnts/", null=True, blank=True)
-    bill_image = models.ImageField(upload_to="media/requiremnts/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

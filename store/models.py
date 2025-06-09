@@ -15,6 +15,14 @@ class TimeStampedModel(models.Model):
     class Meta:
         abstract = True
 
+class Brand(TimeStampedModel, models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField(blank=True)
+    bill_image = models.ImageField(upload_to="media/brand/", null=True, blank=True)
+    is_default = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.name
 
 class Category(MPTTModel):
     name = models.CharField(max_length=255)
@@ -66,7 +74,7 @@ class Product(TimeStampedModel, models.Model):
     )  # Discount amount (₹50)
     stock_quantity = models.PositiveIntegerField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    brand = models.CharField(max_length=100, null=True, blank=True)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True)
     image = models.ImageField(upload_to="media/products/", null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_printed = models.BooleanField(default=False)

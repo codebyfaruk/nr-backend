@@ -7,7 +7,7 @@ from rest_framework.parsers import JSONParser
 import uuid
 from accounts.models import Customer
 from store.filters import ProductFilter, SalesProfitFilter
-from store.models import Category, Discount, Invoice, Product, InvoiceItem
+from store.models import Category, Discount, Invoice, Product, InvoiceItem, Brand
 from store.permissions import IsStaffPermission
 from store.serializers import (
     ApplyCouponSerializer,
@@ -16,6 +16,7 @@ from store.serializers import (
     InvoiceSerializer,
     ProductSerializer,
     SalesProductSerializer,
+    BrandSerializer,
 )
 from decimal import Decimal
 from accounts.serializers import CustomerSerializer
@@ -261,3 +262,20 @@ class SalesProfitViewSet(viewsets.ViewSet):
             })
 
         return Response(data)
+    
+
+class BrandViewSet(viewsets.ModelViewSet):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        if instance.is_default:
+            # Set is_default=False for all other brands
+            Brand.objects.exclude(id=instance.id).update(is_default=False)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if instance.is_default:
+            # Ensure no other brand is marked as default
+            Brand.objects.exclude(id=instance.id).update(is_default=False)
